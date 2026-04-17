@@ -1,0 +1,28 @@
+bin/
+build/
+*.log
+__pycache__
+# --- 编译产物 ---
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# --- 依赖包 ---
+node_modules/
+
+# --- IDE 配置 ---
+.idea/
+*.iml
+.vscode/
+
+# --- 系统文件 ---
+.DS_Store
+Thumbs.db
+
+# --- 日志 ---
+*.log
+logs/
+
+# --- 敏感配置 ---
+# 忽略所有 .env 文件，但保留一个示例文件供团队参考
+.env
+!.env.example
