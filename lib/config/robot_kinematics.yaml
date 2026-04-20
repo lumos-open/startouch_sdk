@@ -15,3 +15,7 @@ mit_mode:
   kd: [16.0, 15.0, 12.5, 1.5, 0.3, 0.01]
   gravity_tau_limits: [50.0, 50.0, 50.0, 50.0, 4.5, 4.5] #{12.0, 12.0, 12.0, 6.0, 4.5, 4.5}
   gravity_comp_scale: 1.15
+
+motor_open_close_position:
+  open_position: -1.9
+  closed_position: 0.0
