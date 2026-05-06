@@ -1,0 +1,71 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+
+
+[project]
+name = "fastouch_sdk"
+version = "0.1.2"
+description = "Precompiled Fastouch robot SDK"
+readme = "README.md"
+authors = [
+]
+maintainers = [
+]
+classifiers = [
+    # TODO
+]
+license = {text = "MIT"}
+dependencies = [
+  "typer",
+  "numpy",
+]
+requires-python = ">= 3.8"
+
+[project.optional-dependencies]
+test = [
+    "coverage",  # testing
+    "pytest",  # testing
+    "ruff",  # linting
+    "ty", # checking types
+    "ipdb", # debugging
+]
+
+[project.urls]
+bugs = "https://github.com/BestManRobotics/BestMan_Touch/issues"
+changelog = "https://github.com/BestManRobotics/BestMan_Touch/blob/master/changelog.md"
+homepage = "https://github.com/BestManRobotics/BestMan_Touch"
+
+[project.scripts]
+  fastouch_sdk = "fastouch_python_sdk.cli:app"
+
+
+
+[tool.scikit-build]
+cmake.args = ["-DCMAKE_BUILD_TYPE=Release"]
+wheel.packages = ["  fastouch_sdk"]
+
+
+
+
+[tool.ty]
+# All rules are enabled as "error" by default; no need to specify unless overriding.
+# Example override: relax a rule for the entire project (uncomment if needed).
+# rules.TY015 = "warn"  # For invalid-argument-type, warn instead of error.
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+
+[tool.uv]
+package = true
