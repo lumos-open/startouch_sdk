@@ -330,11 +330,17 @@ class SingleArm:
         self.arm.setGripperPosition(position)
         return True
 
+    def setGripperDistance(self, distance:float, kp:float, kd:float) -> bool:
+        self.arm.setGripperDistance(distance,kp,kd)
+        return True
 
     def get_gripper_position(self) -> float:
         #设置夹爪开合程度  0是闭合 1是开合
         return self.arm.get_gripper_position()
 
+    def get_gripper_distance(self) -> float:
+        #设置夹爪开合程度  0是闭合 1是开合
+        return self.arm.get_gripper_distance()
 
     def cleanup(self):
         # 或者可以直接在析构函数中释放资源

@@ -46,7 +46,9 @@ class ArmController {
         void closeGripper();
         void setGripperPosition_raw(double position);
         void setGripperPosition(double position);
+        void setGripperDistance(double position, double kp, double kd);
         double get_gripper_position();
+        double get_gripper_distance();
         void cleanup();
     private:
         // 线程对象

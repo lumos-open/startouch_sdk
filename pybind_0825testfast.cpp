@@ -81,7 +81,9 @@ PYBIND11_MODULE(startouch, m) {
         .def("closeGripper", &ArmController::closeGripper)
         .def("setGripperPosition_raw", &ArmController::setGripperPosition_raw,py::arg("position") )
         .def("setGripperPosition", &ArmController::setGripperPosition,py::arg("position") )
+        .def("setGripperDistance", &ArmController::setGripperDistance,py::arg("distance"),py::arg("kp"),py::arg("kd") )
         .def("get_gripper_position", &ArmController::get_gripper_position)
+        .def("get_gripper_distance", &ArmController::get_gripper_distance)
         .def("cleanup", &ArmController::cleanup,  
             py::call_guard<py::gil_scoped_release>())
         ;
