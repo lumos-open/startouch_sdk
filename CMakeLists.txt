@@ -60,23 +60,31 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     
     # 根据版本选择不同的库
     if(OS_VERSION VERSION_GREATER_EQUAL "24.04")
-        set(DEPEND_LIB "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.24")
+        set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.24")
     elseif(OS_VERSION VERSION_GREATER_EQUAL "20.04")
-        set(DEPEND_LIB "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.20")
+        set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.20")
     elseif(OS_VERSION VERSION_GREATER_EQUAL "22.04")
-        set(DEPEND_LIB "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.22")
+        set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.22")
     else()
     message(FATAL_ERROR "Unsupported OS version: ${OS_VERSION}. "
                        "Supported versions: 20.04, 22.04, 24.04 and above")
     endif()
 endif()
 
+set(DEPEND_LIB_DEST "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so")
+
+configure_file(
+    ${DEPEND_LIB_SRC}
+    ${DEPEND_LIB_DEST}
+    COPYONLY
+)
+
 # 创建用户的可执行文件
 # add_executable(user_app main.cpp)
 # target_include_directories(user_app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 #                     ${EIGEN3_INCLUDE_DIR}
 #                                         )
-# target_link_libraries(user_app PUBLIC ${DEPEND_LIB} ${PINOCCHIO_LIBRARIES} )
+# target_link_libraries(user_app PUBLIC ${DEPEND_LIB_DEST} ${PINOCCHIO_LIBRARIES} )
 
 #[[
 ###生成.so文件  pybind.cpp 这个是带有皮诺曹和初始值的###
@@ -87,7 +95,7 @@ target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
                     ${PINOCCHIO_INCLUDE_DIRS}
                     ${EIGEN3_INCLUDE_DIR}
                                         )
-target_link_libraries(startouch PRIVATE ${DEPEND_LIB} ${PINOCCHIO_LIBRARIES} )
+target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} ${PINOCCHIO_LIBRARIES} )
 ]]
 
 
@@ -99,4 +107,4 @@ pybind11_add_module(startouch ${CMAKE_CURRENT_SOURCE_DIR}/src/pybind_0825testfas
 target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
                     ${EIGEN3_INCLUDE_DIR}
                                         )
-target_link_libraries(startouch PRIVATE ${DEPEND_LIB} Threads::Threads )
+target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Threads::Threads )

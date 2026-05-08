@@ -3,10 +3,10 @@ kinematics:
     xyz: [0.15584, 0.0, 0.0]
     rpy: [0.0, 0.0, 0.0]
   payload:
-    mass: 0.126
+    mass: 0
     com: [0.072, 0, 0.082] #相对于Joint6的Origin的质心    # inertia is optional and not required for current payload handling
 
-motor_signs: [1, 1, -1, -1, -1, 1]
+motor_signs: [1, -1, -1, -1, -1, 1]
 
 pos_vel_mode:
   max_acc_limits: [28.0, 28.0, 28.0, 22.0, 26.0, 26.0]
