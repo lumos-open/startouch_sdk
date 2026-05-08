@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+    add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 # find_package(pinocchio REQUIRED)
@@ -49,7 +49,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
     )
-    
+
     # 或者读取 /etc/os-release
     file(STRINGS "/etc/os-release" OS_RELEASE_CONTENT)
     foreach(LINE ${OS_RELEASE_CONTENT})
@@ -57,17 +57,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             string(REGEX REPLACE "VERSION_ID=\"?([0-9.]*)\"?" "\\1" OS_VERSION ${LINE})
         endif()
     endforeach()
-    
+
     # 根据版本选择不同的库
     if(OS_VERSION VERSION_GREATER_EQUAL "24.04")
         set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.24")
-    elseif(OS_VERSION VERSION_GREATER_EQUAL "20.04")
-        set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.20")
     elseif(OS_VERSION VERSION_GREATER_EQUAL "22.04")
         set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.22")
+    elseif(OS_VERSION VERSION_GREATER_EQUAL "20.04")
+        set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.20")
     else()
-    message(FATAL_ERROR "Unsupported OS version: ${OS_VERSION}. "
-                       "Supported versions: 20.04, 22.04, 24.04 and above")
+        message(FATAL_ERROR "Unsupported OS version: ${OS_VERSION}. "
+            "Supported versions: 20.04, 22.04, 24.04 and above")
     endif()
 endif()
 
@@ -105,6 +105,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/interface_py)
 pybind11_add_module(startouch ${CMAKE_CURRENT_SOURCE_DIR}/src/pybind_0825testfast.cpp) #这个是需要额外的辨识参数
 
 target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
-                    ${EIGEN3_INCLUDE_DIR}
-                                        )
-target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Threads::Threads )
+    ${EIGEN3_INCLUDE_DIR}
+)
+target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Threads::Threads)
