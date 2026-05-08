@@ -40,23 +40,23 @@ find_package(Threads REQUIRED)
 #         ARCHIVE DESTINATION ./${PROJECT_NAME}/)
 
 
-set(DEPEND_LIB "${CMAKE_CURRENT_SOURCE_DIR}/lib/libstartouch.so")
+set(DEPEND_LIB "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so")
 
 
 
 # 创建用户的可执行文件
 # add_executable(user_app main.cpp)
-# target_include_directories(user_app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib
+# target_include_directories(user_app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 #                     ${EIGEN3_INCLUDE_DIR}
 #                                         )
 # target_link_libraries(user_app PUBLIC ${DEPEND_LIB} ${PINOCCHIO_LIBRARIES} )
 
 #[[
 ###生成.so文件  pybind.cpp 这个是带有皮诺曹和初始值的###
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/interface_py)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/src)
 pybind11_add_module(startouch pybind.cpp)
 # add_executable(controller_pybind examples/controller_pybind.cpp)
-target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib
+target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
                     ${PINOCCHIO_INCLUDE_DIRS}
                     ${EIGEN3_INCLUDE_DIR}
                                         )
@@ -67,9 +67,9 @@ target_link_libraries(startouch PRIVATE ${DEPEND_LIB} ${PINOCCHIO_LIBRARIES} )
 ###生成.so文件
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/interface_py)
 # pybind11_add_module(startouch pybind_wopin.cpp)  #这里是最后把参数辨识参数融进去的
-pybind11_add_module(startouch pybind_0825testfast.cpp) #这个是需要额外的辨识参数
+pybind11_add_module(startouch ${CMAKE_CURRENT_SOURCE_DIR}/src/pybind_0825testfast.cpp) #这个是需要额外的辨识参数
 
-target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib
+target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
                     ${EIGEN3_INCLUDE_DIR}
                                         )
 target_link_libraries(startouch PRIVATE ${DEPEND_LIB} Threads::Threads )
