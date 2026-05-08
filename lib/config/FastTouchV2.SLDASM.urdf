@@ -26,7 +26,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/base_link.STL" />
+          filename="./meshes/base_link.STL" />
       </geometry>
       <material
         name="">
@@ -40,7 +40,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/base_link.STL" />
+          filename="./meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -66,7 +66,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link1.STL" />
+          filename="./meshes/link1.STL" />
       </geometry>
       <material
         name="">
@@ -80,7 +80,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link1.STL" />
+          filename="./meshes/link1.STL" />
       </geometry>
     </collision>
   </link>
@@ -124,7 +124,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link2.STL" />
+          filename="./meshes/link2.STL" />
       </geometry>
       <material
         name="">
@@ -138,7 +138,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link2.STL" />
+          filename="./meshes/link2.STL" />
       </geometry>
     </collision>
   </link>
@@ -182,7 +182,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link3.STL" />
+          filename="./meshes/link3.STL" />
       </geometry>
       <material
         name="">
@@ -196,7 +196,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link3.STL" />
+          filename="./meshes/link3.STL" />
       </geometry>
     </collision>
   </link>
@@ -240,7 +240,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link4.STL" />
+          filename="./meshes/link4.STL" />
       </geometry>
       <material
         name="">
@@ -254,7 +254,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link4.STL" />
+          filename="./meshes/link4.STL" />
       </geometry>
     </collision>
   </link>
@@ -273,7 +273,7 @@
     <limit
       lower="-1.710"
       upper="1.710"
-      effort="7"
+      effort="12.5"
       velocity="20.9" />
   </joint>
   <link
@@ -298,7 +298,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link5.STL" />
+          filename="./meshes/link5.STL" />
       </geometry>
       <material
         name="">
@@ -312,7 +312,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link5.STL" />
+          filename="./meshes/link5.STL" />
       </geometry>
     </collision>
   </link>
@@ -341,7 +341,7 @@
         xyz="0.047873 1.5E-05 0.000968"
         rpy="0 0 0" />
       <mass
-        value="0.8581" />
+        value="0.5581" />
       <inertia
         ixx="0.000428"
         ixy="0"
@@ -356,7 +356,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link6.STL" />
+          filename="./meshes/link6.STL" />
       </geometry>
       <material
         name="">
@@ -370,7 +370,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://FastTouchV2.SLDASM/meshes/link6.STL" />
+          filename="./meshes/link6.STL" />
       </geometry>
     </collision>
   </link>

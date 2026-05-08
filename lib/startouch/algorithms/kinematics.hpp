@@ -125,6 +125,12 @@ class RobotKinematics {
                     std::vector<double>& q_out);
         std::vector<double> forwardKinematics_kdl(const std::vector<double>& q_vec);
         std::vector<double> gravity_compensation_kdl(const std::vector<double>& q_vec) const;
+        std::vector<double> coriolis_compensation_kdl(const std::vector<double>& q_vec,const std::vector<double>& qd_vec) const;
+
+        std::vector<double> dynamic_compensation_kdl(
+                const std::vector<double>& q_vec, 
+                const std::vector<double>& qd_vec, 
+                const std::vector<double>& qdd_vec) const;
 
 
     private:
@@ -134,7 +140,7 @@ class RobotKinematics {
         std::unique_ptr<ChainIkSolverPos_LMA> ik_solver_;
         std::unique_ptr<ChainFkSolverPos_recursive> fk_solver_;
         std::unique_ptr<ChainDynParam> dyn_solver_;
-    
-    };
-    
-    
+
+};
+
+

@@ -26,3 +26,5 @@ logs/
 # 忽略所有 .env 文件，但保留一个示例文件供团队参考
 .env
 !.env.example
+
+*-gnu.so

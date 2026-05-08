@@ -330,7 +330,11 @@ class SingleArm:
         self.arm.setGripperPosition(position)
         return True
 
-    def setGripperDistance(self, distance:float, kp:float, kd:float) -> bool:
+    def setGripperDistance(self, distance:float) -> bool:
+        self.arm.setGripperDistance(distance)
+        return True
+
+    def setGripperDistance_raw(self, distance:float, kp:float, kd:float) -> bool:
         self.arm.setGripperDistance(distance,kp,kd)
         return True
 
