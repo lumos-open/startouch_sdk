@@ -108,3 +108,11 @@ target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${EIGEN3_INCLUDE_DIR}
 )
 target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Threads::Threads)
+set_target_properties(startouch PROPERTIES INSTALL_RPATH "$ORIGIN")
+
+install(TARGETS startouch LIBRARY DESTINATION .)
+install(FILES
+    ${DEPEND_LIB_DEST}
+    ${CMAKE_CURRENT_SOURCE_DIR}/interface_py/startouchclass.py
+    DESTINATION .
+)
