@@ -178,13 +178,15 @@ def load_clamp_tum(path):
     return np.array(ts), np.array(vals) if ts else (np.array([]), np.array([]))
 
 
-def align_clamp_to_trajectory(traj_timestamps, clamp_ts, clamp_vals, clamp_max=90.0):
+def align_clamp_to_trajectory(traj_timestamps, clamp_ts, clamp_vals, clamp_max=85.0):
     if len(clamp_ts) == 0 or len(clamp_vals) == 0:
         return None
     idx = np.argmin(np.abs(clamp_ts[:, None] - traj_timestamps[None, :]), axis=0)
     vals = np.clip(clamp_vals[idx].astype(np.float64), 0, clamp_max)
     frac = (clamp_max - vals) / clamp_max
     return np.clip(frac, 0.0, 1.0)
+    # frac = vals / 1000
+    # return np.clip(frac, 0.0, 0.085)
 
 
 def build_T_base_to_local(base_x, base_y, base_z, base_roll_deg, base_pitch_deg, base_yaw_deg):
@@ -223,7 +225,7 @@ def trajectory_to_startouch(traj, T_base_to_local=None):
     return out
 
 
-def interpolate_and_move(arm: SingleArm, start_pos, start_quat_wxyz, target_pos, target_quat_wxyz, step_size=0.01, dt=0.04):
+def interpolate_and_move(arm: SingleArm, start_pos, start_quat_wxyz, target_pos, target_quat_wxyz, step_size=0.001, dt=0.04):
     """返回 True 表示正常完成，False 表示被用户中断"""
     p0 = np.asarray(start_pos, dtype=float)
     p1 = np.asarray(target_pos, dtype=float)
@@ -267,11 +269,12 @@ def main():
     parser = argparse.ArgumentParser(description='单臂轨迹复现（startouch，按Q结束回放但仍绘图归位）')
     parser.add_argument('--left_file', type=str, default='/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_daoshui/session_101347/Merged_Trajectory/merged_trajectory.txt')
     parser.add_argument('--replay_dir', type=str, default='')
-    parser.add_argument('--left_clamp_file', type=str, default='/home/zgy/FastUMI_Touch_test/data_trajectory/session_091619/right_hand_250801DR48FP26001130/Merged_Trajectory/Clamp_Data/clamp_data_tum.txt')
+    parser.add_argument('--left_clamp_file', type=str, default='/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_daoshui/session_101347/Clamp_Data/clamp_data_tum.txt')
     parser.add_argument('--dt', type=float, default=0.02)
     parser.add_argument('--interp_step_size', type=float, default=0.001)
+    # parser.add_argument('--interp_step_size', type=float, default=0.0001)
     parser.add_argument('--gripper', type=float, default=0.0)
-    parser.add_argument('--clamp_max', type=float, default=90.0)
+    parser.add_argument('--clamp_max', type=float, default=85.0)
     parser.add_argument('--no_gripper', action='store_true')
     parser.add_argument('--dry_run', action='store_true')
     parser.add_argument('--debug_interp', action='store_true')

@@ -273,7 +273,7 @@
     <limit
       lower="-1.710"
       upper="1.710"
-      effort="12.5"
+      effort="7"
       velocity="20.9" />
   </joint>
   <link

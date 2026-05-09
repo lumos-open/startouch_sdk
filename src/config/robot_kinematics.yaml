@@ -3,8 +3,8 @@ kinematics:
     xyz: [0.15584, 0.0, 0.0]
     rpy: [0.0, 0.0, 0.0]
   payload:
-    mass: 0 #带相机该值为0.126，不带相机该值为0
-    com: [0.072, 0, 0.082] #相机相对于Joint6的Origin的质心    # inertia is optional and not required for current payload handling
+    mass: 0 #带相机该值为0.126，不带相机该值为0;单位是kg;
+    com: [0.072, 0, 0.082] #Joint6的Origin和负载质心的偏置距离;单位是m;
 
 motor_signs: [1, -1, -1, -1, -1, 1]
 
@@ -15,6 +15,6 @@ pos_vel_mode:
 
 mit_mode:
   kp: [300.0, 490.0, 490.0, 65.0,  45.0,  45.0]
-  kd: [ 16.0, 15,  12.5,   2,   2,  2] 
+  kd: [ 16.0, 15,  12.5,   2,   2,  2]
   gravity_tau_limits: [27.0, 27.0, 27.0, 7.0, 12.5, 12.5]
   gravity_comp_scale: 1.05

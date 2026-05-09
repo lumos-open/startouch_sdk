@@ -313,7 +313,7 @@ def return_to_home_with_interp(arm: SingleArm, home_pos, home_quat_wxyz, step_si
 
 def main():
     parser = argparse.ArgumentParser(description='单臂轨迹复现（startouch，按Q结束回放但仍绘图归位）')
-    parser.add_argument('--left_file', type=str, default='/home/lumos/code/FastTouchV2/cccc/starnew/session_091619/right_hand_250801DR48FP26001130/Merged_Trajectory/merged_trajectory.txt')
+    parser.add_argument('--left_file', type=str, default='/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_daoshui/session_101347/Merged_Trajectory/merged_trajectory.txt')
     parser.add_argument('--replay_dir', type=str, default='')
     parser.add_argument('--dt', type=float, default=0.0025)
     parser.add_argument('--interp_step_size', type=float, default=0.001)
