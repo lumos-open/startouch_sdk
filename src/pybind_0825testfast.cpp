@@ -28,6 +28,15 @@ PYBIND11_MODULE(startouch, m) {
 
         .def("set_joint_raw", &ArmController::set_joint_raw,py::arg("q_end"),py::arg("v_end"))
 
+        .def("move_joint_waypoints", &ArmController::move_joint_waypoints,
+            "Move through joint waypoints with YAML-configured trajectory limits.\n"
+            "speed_percent in (0, 1] overrides time_sec. If neither is provided, "
+            "the YAML default_speed_percent is used.",
+            py::arg("waypoints"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("control_hz") = 400.0)
+
         .def("gravity_compensation", &ArmController::identify_gravity_compensation,"identify_gravity_compensation function.")        
         
         .def("set_end_effector_pose", &ArmController::set_end_effector_pose, 

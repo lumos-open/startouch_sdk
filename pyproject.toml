@@ -20,6 +20,9 @@ license = {text = "MIT"}
 dependencies = [
   "typer",
   "numpy",
+  "scipy",
+  "tqdm",
+  "matplotlib",
 ]
 requires-python = ">= 3.8"
 

@@ -23,6 +23,11 @@ class ArmController {
         ~ArmController();
         void set_joint(const std::vector<double>& q_end, double tf = 3.0);
         void set_joint_raw(const std::vector<double>& q_end,const std::vector<double>& v_end);
+        void move_joint_waypoints(
+            const std::vector<std::vector<double>>& waypoints,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double control_hz = 400.0);
 
         // void set_joint_raw_ik(const std::vector<double>& q_end,const std::vector<double>& v_end, const std::vector<double>& q_now);
         void identify_gravity_compensation();

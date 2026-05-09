@@ -172,6 +172,21 @@ class SingleArm:
         self.arm.set_joint_raw(q_end = positions,v_end = velocities)
         return True
 
+    def move_joint_waypoints(
+        self,
+        waypoints: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+        ctrl_hz: float = 400.0,
+    ) -> bool:
+        self.arm.move_joint_waypoints(
+            waypoints=waypoints,
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            control_hz=ctrl_hz,
+        )
+        return True
+
 
     # 带时间规划
     def set_end_effector_pose_euler(

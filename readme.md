@@ -4,6 +4,8 @@ conda create -n startouch python=3.10
 
 conda activate startouch
 
+python -m pip install -e .
+
 # 更新包列表
 sudo apt-get update
 
