@@ -72,7 +72,7 @@ class SafeArmController:
                 pos = [-2.7, 1.54, -3, 0, -1.6, 2.7]    # mot1 left & mot5 left &mot6 ccw
                 self.arm_controller.set_joint(pos, tf=5)
                 time.sleep(5)
-                # self.arm_controller.setGripperDistance(0.085)
+                self.arm_controller.setGripperDistance(0.085)
                 # time.sleep(2)
                 pos = [0, 0, 0, 0, 0, 0]    # mot1 left & mot5 left &mot6 ccw
                 self.arm_controller.set_joint(pos, tf=5)
