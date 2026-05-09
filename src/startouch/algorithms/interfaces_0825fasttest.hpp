@@ -46,8 +46,8 @@ class ArmController {
         void closeGripper();
         void setGripperPosition_raw(double position);
         void setGripperPosition(double position);
-        void setGripperDistance(double position);
-        void setGripperDistance(double position, double kp, double kd);
+        void setGripperDistance(double distance);
+        void setGripperDistance(double distance, double kp, double kd = 0.1);
         double get_gripper_position();
         double get_gripper_distance();
         void cleanup();
