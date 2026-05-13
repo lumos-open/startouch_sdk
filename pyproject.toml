@@ -8,7 +8,7 @@ build-backend = "scikit_build_core.build"
 name = "fastouch_sdk"
 version = "0.1.2"
 description = "Precompiled Fastouch robot SDK"
-readme = "README.md"
+readme = "README_INSTALL.md"
 authors = [
 ]
 maintainers = [
@@ -21,8 +21,13 @@ dependencies = [
   "typer",
   "numpy",
   "scipy",
+  "PyYAML",
+  "python-can>=4.3.1",
   "tqdm",
   "matplotlib",
+  "opencv-python",
+  "pillow",
+  "h5py",
 ]
 requires-python = ">= 3.8"
 

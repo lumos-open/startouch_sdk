@@ -13,6 +13,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R, Slerp
 from tqdm import tqdm
 import os
+from dataclasses import dataclass
 
 from startouchclass import SingleArm, euler_to_quaternion
 
@@ -235,6 +236,47 @@ def estimate_dt_from_timestamps(timestamps: np.ndarray, fallback_dt: float = 0.0
     return float(np.median(diffs))
 
 
+def trajectory_duration_from_timestamps(timestamps: np.ndarray, fallback_dt: float = 0.01) -> float:
+    if timestamps is None or len(timestamps) < 2:
+        return fallback_dt
+    t0 = float(timestamps[0])
+    t1 = float(timestamps[-1])
+    duration = t1 - t0
+    if not np.isfinite(duration) or duration <= 0.0:
+        return max((len(timestamps) - 1) * fallback_dt, fallback_dt)
+    return duration
+
+
+@dataclass
+class MotionThreadResult:
+    planned_duration_s: float = 0.0
+    error: Exception | None = None
+
+
+def start_waypoint_motion_thread(
+    arm: SingleArm,
+    joint_waypoints,
+    time_sec: float,
+    speed_percent: float,
+) -> tuple[threading.Thread, MotionThreadResult]:
+    result = MotionThreadResult()
+
+    def runner():
+        try:
+            result.planned_duration_s = arm.move_joint_waypoints(
+                joint_waypoints,
+                time_sec=time_sec,
+                speed_percent=speed_percent,
+                ctrl_hz=400.0,
+            )
+        except Exception as exc:
+            result.error = exc
+
+    thread = threading.Thread(target=runner, daemon=False)
+    thread.start()
+    return thread, result
+
+
 def solve_joint_waypoints(arm: SingleArm, poses):
     q_seed = list(arm.get_joint_positions())
     joint_points = []
@@ -317,6 +359,12 @@ def main():
     parser.add_argument('--waypoint_speed_percent', type=float, default=-1.0)
     args = parser.parse_args()
 
+    if args.waypoint_speed_percent > 0.0:
+        print(
+            f'固定时间回放要求使用 time_sec；忽略 waypoint_speed_percent={args.waypoint_speed_percent}'
+        )
+        args.waypoint_speed_percent = -1.0
+
     left_path = os.path.join(args.replay_dir, args.left_file)
     print(f"左臂轨迹文件: {left_path}")
     left_clamp_path = os.path.join(args.replay_dir, args.left_clamp_file)
@@ -341,6 +389,8 @@ def main():
     data_dt = estimate_dt_from_timestamps(left_traj[:, 0], fallback_dt=args.dt)
     args.dt = data_dt
     print(f'使用轨迹时间间隔 dt={args.dt:.6f}s')
+    waypoint_time = trajectory_duration_from_timestamps(left_traj[:, 0], fallback_dt=args.dt)
+    print(f'使用轨迹总时间 time_sec={waypoint_time:.6f}s（按首尾 timestamp 对齐）')
 
     gripper_left_arr = None
     if os.path.isfile(left_clamp_path):
@@ -414,16 +464,14 @@ def main():
             print('开始复现轨迹...')
             print('预解 IK waypoints...')
             joint_waypoints = solve_joint_waypoints(left_arm, poses_left)
-            waypoint_time = max((n_steps - 1) * args.dt, args.dt)
             print(f'下发 waypoint 轨迹: points={len(joint_waypoints)}, time_sec={waypoint_time:.6f}s')
-            left_arm.move_joint_waypoints(
+            start_time = time.monotonic()
+            motion_thread, motion_result = start_waypoint_motion_thread(
+                left_arm,
                 joint_waypoints,
                 time_sec=waypoint_time,
                 speed_percent=args.waypoint_speed_percent,
-                ctrl_hz=400.0,
             )
-
-            start_time = time.monotonic()
             with tqdm(total=n_steps, desc='复现轨迹', unit='步') as pbar:
                 for i in range(n_steps):
                     if is_quit_requested():
@@ -451,9 +499,10 @@ def main():
                     executed_steps = i + 1
                     pbar.update(1)
 
-            remain_s = start_time + waypoint_time - time.monotonic()
-            if remain_s > 0:
-                time.sleep(remain_s)
+            motion_thread.join()
+            if motion_result.error is not None:
+                raise motion_result.error
+            print(f'waypoint 轨迹执行完成: planned_duration_s={motion_result.planned_duration_s:.6f}s')
 
         # 绘图（使用实际记录的步数）
         if not args.no_plot and executed_steps > 0:

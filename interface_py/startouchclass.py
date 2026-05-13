@@ -94,6 +94,93 @@ def euler_to_quaternion(roll: float, pitch: float, yaw: float) -> np.ndarray:
     return np.array([w, x, y, z])
 
 
+class MotionProgram:
+    """
+    结构化运动程序。连续 movej 会在底层合并成同一组路点；sleep 是明确阻断点。
+    """
+
+    def __init__(self):
+        self._items = []
+
+    @staticmethod
+    def _check_time_speed_exclusive(time_sec: float, speed_percent: float) -> None:
+        if time_sec > 0.0 and speed_percent > 0.0:
+            raise ValueError("time_sec and speed_percent are mutually exclusive")
+
+    @staticmethod
+    def _as_2d_points(values, width: int, name: str) -> List[List[float]]:
+        arr = np.asarray(values, dtype=float)
+        if arr.ndim == 1:
+            if arr.shape[0] != width:
+                raise ValueError(f"{name} must have {width} values")
+            arr = arr.reshape(1, width)
+        elif arr.ndim == 2:
+            if arr.shape[1] != width:
+                raise ValueError(f"each {name} row must have {width} values")
+        else:
+            raise ValueError(f"{name} must be a 1D point or 2D point list")
+        return arr.tolist()
+
+    def movej(
+        self,
+        waypoints: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+    ) -> "MotionProgram":
+        self._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        item = startouch.MotionProgramItem()
+        item.type = "movej"
+        item.waypoints = self._as_2d_points(waypoints, 6, "waypoint")
+        item.time_sec = float(time_sec)
+        item.speed_percent = float(speed_percent)
+        self._items.append(item)
+        return self
+
+    def movel(
+        self,
+        poses: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+        blend_radius_m: float = 0.0,
+    ) -> "MotionProgram":
+        self._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        item = startouch.MotionProgramItem()
+        item.type = "movel"
+        item.poses = self._as_2d_points(poses, 6, "pose")
+        item.time_sec = float(time_sec)
+        item.speed_percent = float(speed_percent)
+        item.blend_radius_m = float(blend_radius_m)
+        self._items.append(item)
+        return self
+
+    def movep(
+        self,
+        poses: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+        blend_radius_m: float = 0.002,
+    ) -> "MotionProgram":
+        self._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        item = startouch.MotionProgramItem()
+        item.type = "movep"
+        item.poses = self._as_2d_points(poses, 6, "pose")
+        item.time_sec = float(time_sec)
+        item.speed_percent = float(speed_percent)
+        item.blend_radius_m = float(blend_radius_m)
+        self._items.append(item)
+        return self
+
+    def sleep(self, sleep_sec: float) -> "MotionProgram":
+        item = startouch.MotionProgramItem()
+        item.type = "sleep"
+        item.sleep_sec = float(sleep_sec)
+        self._items.append(item)
+        return self
+
+    @property
+    def items(self):
+        return self._items
+
 
 class SingleArm:
     """
@@ -178,14 +265,83 @@ class SingleArm:
         time_sec: float = 0.0,
         speed_percent: float = -1.0,
         ctrl_hz: float = 400.0,
-    ) -> bool:
-        self.arm.move_joint_waypoints(
-            waypoints=waypoints,
+    ) -> float:
+        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        return self.arm.move_joint_waypoints(
+            waypoints=MotionProgram._as_2d_points(waypoints, 6, "waypoint"),
             time_sec=time_sec,
             speed_percent=speed_percent,
             control_hz=ctrl_hz,
         )
-        return True
+
+    def move_pose_waypoints(
+        self,
+        poses: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+        ctrl_hz: float = 400.0,
+        position_tolerance_m: float = 0.005,
+        orientation_tolerance_rad: float = 0.05,
+    ) -> float:
+        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        return self.arm.move_pose_waypoints(
+            poses=MotionProgram._as_2d_points(poses, 6, "pose"),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            control_hz=ctrl_hz,
+            position_tolerance_m=position_tolerance_m,
+            orientation_tolerance_rad=orientation_tolerance_rad,
+        )
+
+    def move_l(
+        self,
+        poses: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+        blend_radius_m: float = 0.0,
+        ctrl_hz: float = 400.0,
+        position_tolerance_m: float = 0.003,
+        orientation_tolerance_rad: float = 0.05,
+    ) -> float:
+        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        return self.arm.move_l(
+            poses=MotionProgram._as_2d_points(poses, 6, "pose"),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            blend_radius_m=blend_radius_m,
+            control_hz=ctrl_hz,
+            position_tolerance_m=position_tolerance_m,
+            orientation_tolerance_rad=orientation_tolerance_rad,
+        )
+
+    def move_p(
+        self,
+        poses: Union[List[List[float]], np.ndarray],
+        time_sec: float = 0.0,
+        speed_percent: float = -1.0,
+        blend_radius_m: float = 0.002,
+        ctrl_hz: float = 400.0,
+        position_tolerance_m: float = 0.003,
+        orientation_tolerance_rad: float = 0.05,
+    ) -> float:
+        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        return self.arm.move_p(
+            poses=MotionProgram._as_2d_points(poses, 6, "pose"),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            blend_radius_m=blend_radius_m,
+            control_hz=ctrl_hz,
+            position_tolerance_m=position_tolerance_m,
+            orientation_tolerance_rad=orientation_tolerance_rad,
+        )
+
+    def run_motion_program(
+        self,
+        program: Union[MotionProgram, List[Any]],
+        ctrl_hz: float = 400.0,
+    ) -> float:
+        items = program.items if isinstance(program, MotionProgram) else program
+        return self.arm.run_motion_program(items, control_hz=ctrl_hz)
 
 
     # 带时间规划

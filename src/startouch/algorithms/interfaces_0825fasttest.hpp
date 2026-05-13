@@ -5,12 +5,23 @@
 #include <utility>
 #include <memory>
 #include <atomic>
+#include <string>
 
 #include "startouch/damiao_motor/dm_motor_constants.hpp"
 
 
 class ArmController {
     public:
+        struct MotionProgramItem {
+            std::string type;
+            std::vector<std::vector<double>> waypoints;
+            std::vector<std::vector<double>> poses;
+            double time_sec = 0.0;
+            double speed_percent = -1.0;
+            double sleep_sec = 0.0;
+            double blend_radius_m = 0.002;
+        };
+
         ArmController(
             bool  gripper_exist = false,
             const std::string& can_interface = "can0", 
@@ -23,10 +34,36 @@ class ArmController {
         ~ArmController();
         void set_joint(const std::vector<double>& q_end, double tf = 3.0);
         void set_joint_raw(const std::vector<double>& q_end,const std::vector<double>& v_end);
-        void move_joint_waypoints(
+        double move_joint_waypoints(
             const std::vector<std::vector<double>>& waypoints,
             double time_sec = 0.0,
             double speed_percent = -1.0,
+            double control_hz = 400.0);
+        double move_pose_waypoints(
+            const std::vector<std::vector<double>>& poses,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double control_hz = 400.0,
+            double position_tolerance_m = 0.005,
+            double orientation_tolerance_rad = 0.05);
+        double move_l(
+            const std::vector<std::vector<double>>& poses,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double blend_radius_m = 0.0,
+            double control_hz = 400.0,
+            double position_tolerance_m = 0.003,
+            double orientation_tolerance_rad = 0.05);
+        double move_p(
+            const std::vector<std::vector<double>>& poses,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double blend_radius_m = 0.002,
+            double control_hz = 400.0,
+            double position_tolerance_m = 0.003,
+            double orientation_tolerance_rad = 0.05);
+        double run_motion_program(
+            const std::vector<MotionProgramItem>& program,
             double control_hz = 400.0);
 
         // void set_joint_raw_ik(const std::vector<double>& q_end,const std::vector<double>& v_end, const std::vector<double>& q_now);

@@ -126,6 +126,7 @@ class RobotKinematics {
         std::vector<double> forwardKinematics_kdl(const std::vector<double>& q_vec);
         std::vector<double> gravity_compensation_kdl(const std::vector<double>& q_vec) const;
         std::vector<double> coriolis_compensation_kdl(const std::vector<double>& q_vec,const std::vector<double>& qd_vec) const;
+        std::vector<double> inertia_compensation_kdl(const std::vector<double>& q_vec,const std::vector<double>& qdd_vec) const;
 
         std::vector<double> dynamic_compensation_kdl(
                 const std::vector<double>& q_vec, 

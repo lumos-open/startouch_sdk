@@ -7,6 +7,16 @@
 
 namespace py = pybind11;
 PYBIND11_MODULE(startouch, m) {
+    py::class_<ArmController::MotionProgramItem>(m, "MotionProgramItem")
+        .def(py::init<>())
+        .def_readwrite("type", &ArmController::MotionProgramItem::type)
+        .def_readwrite("waypoints", &ArmController::MotionProgramItem::waypoints)
+        .def_readwrite("poses", &ArmController::MotionProgramItem::poses)
+        .def_readwrite("time_sec", &ArmController::MotionProgramItem::time_sec)
+        .def_readwrite("speed_percent", &ArmController::MotionProgramItem::speed_percent)
+        .def_readwrite("sleep_sec", &ArmController::MotionProgramItem::sleep_sec)
+        .def_readwrite("blend_radius_m", &ArmController::MotionProgramItem::blend_radius_m);
+
     py::class_<ArmController>(m, "ArmController")
         .def(py::init([](py::kwargs kwargs) {
         //std::string permutation_matrix = kwargs.contains("permutation_matrix") ? kwargs["permutation_matrix"].cast<std::string>() : "/media/sdk/data/aproject/Xrobot/Nxyarm/openarm_can/param_csv/permutationMatrix.csv";
@@ -30,12 +40,58 @@ PYBIND11_MODULE(startouch, m) {
 
         .def("move_joint_waypoints", &ArmController::move_joint_waypoints,
             "Move through joint waypoints with YAML-configured trajectory limits.\n"
-            "speed_percent in (0, 1] overrides time_sec. If neither is provided, "
-            "the YAML default_speed_percent is used.",
+            "Use either speed_percent in (0, 1] or time_sec > 0, not both. "
+            "If neither is provided, the YAML default_speed_percent is used. "
+            "Blocks until the motion finishes and returns the planned motion duration in seconds.",
             py::arg("waypoints"),
             py::arg("time_sec") = 0.0,
             py::arg("speed_percent") = -1.0,
-            py::arg("control_hz") = 400.0)
+            py::arg("control_hz") = 400.0,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("move_pose_waypoints", &ArmController::move_pose_waypoints,
+            "MOVEJ_POSE: solve each [x, y, z, roll, pitch, yaw] pose to IK, "
+            "then execute the resulting joint waypoints with smooth MOVEJ planning. "
+            "Use either speed_percent in (0, 1] or time_sec > 0, not both. "
+            "Blocks until the motion finishes and returns the planned motion duration in seconds.",
+            py::arg("poses"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("control_hz") = 400.0,
+            py::arg("position_tolerance_m") = 0.005,
+            py::arg("orientation_tolerance_rad") = 0.05,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("move_l", &ArmController::move_l,
+            "MoveL: execute Cartesian linear pose waypoints. Pose format is "
+            "[x, y, z, roll, pitch, yaw]. Orientation interpolation uses quaternion slerp.",
+            py::arg("poses"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("blend_radius_m") = 0.0,
+            py::arg("control_hz") = 400.0,
+            py::arg("position_tolerance_m") = 0.003,
+            py::arg("orientation_tolerance_rad") = 0.05,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("move_p", &ArmController::move_p,
+            "MoveP: execute Cartesian pose waypoints with corner blending. Pose format is "
+            "[x, y, z, roll, pitch, yaw]. Orientation interpolation uses quaternion slerp.",
+            py::arg("poses"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("blend_radius_m") = 0.002,
+            py::arg("control_hz") = 400.0,
+            py::arg("position_tolerance_m") = 0.003,
+            py::arg("orientation_tolerance_rad") = 0.05,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("run_motion_program", &ArmController::run_motion_program,
+            "Run a structured motion program. Consecutive MoveJ items are merged "
+            "for continuous waypoint planning; Sleep items are blocking breakpoints.",
+            py::arg("program"),
+            py::arg("control_hz") = 400.0,
+            py::call_guard<py::gil_scoped_release>())
 
         .def("gravity_compensation", &ArmController::identify_gravity_compensation,"identify_gravity_compensation function.")        
         
