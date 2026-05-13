@@ -93,8 +93,8 @@ class MainArmJointInference(Node):
 
                     right_gripper = self.gripper_right_target
                     left_gripper = self.gripper_left_target
-                # self.arm_right.setGripperPosition_raw(position = right_gripper)
-                # self.arm_left.setGripperPosition_raw(position = left_gripper)
+                # self.arm_right.setGripperPosition(position = right_gripper)
+                # self.arm_left.setGripperPosition(position = left_gripper)
 
                 # self.arm_right.set_joint_raw(positions = right_target, velocities = [0, 0, 0, 0, 0, 0])
                 # self.arm_left.set_joint_raw(positions = left_target, velocities = [0, 0, 0, 0, 0, 0])

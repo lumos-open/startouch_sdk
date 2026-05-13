@@ -805,11 +805,9 @@ def main():
                 "[INFO] 下发 joint waypoints: "
                 f"points={len(joint_waypoints)}, speed_percent={args.speed_percent:.3f}"
             )
-            arm.move_joint_waypoints(
+            arm.set_joint_waypoints(
                 joint_waypoints,
-                time_sec=0.0,
                 speed_percent=args.speed_percent,
-                ctrl_hz=400.0,
             )
 
             last_record = cmd_records[-1]

@@ -31,7 +31,7 @@ def main():
     ]
 
     print("Single blocking MoveJ:")
-    print("  arm.move_joint_waypoints(move_a, speed_percent=...)")
+    print("  arm.set_joint_waypoints(move_a, speed_percent=...)")
     print("  returns after move_a is finished; returned value is planned duration_s.")
     print()
     print("MotionProgram:")
@@ -52,7 +52,7 @@ def main():
         time.sleep(3.2)
 
         start = time.monotonic()
-        duration = arm.move_joint_waypoints(move_a, speed_percent=args.speed_percent)
+        duration = arm.set_joint_waypoints(move_a, speed_percent=args.speed_percent)
         elapsed = time.monotonic() - start
         print(f"Blocking MoveJ returned duration_s={duration:.3f}, wall_elapsed_s={elapsed:.3f}")
 

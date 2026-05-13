@@ -118,7 +118,7 @@ class MainArmJointPublisher(Node):
 
                 # 使用滤波后的速度
                 self.arm_follower.set_joint_raw(positions=temp_positions_controller,velocities=self.vel_filtered)
-                self.arm_follower.setGripperPosition_raw(position = temp_positions_controller_gripper)
+                self.arm_follower.setGripperPosition(position = temp_positions_controller_gripper)
 
                 time.sleep(0.001)
             except Exception as e:

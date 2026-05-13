@@ -522,13 +522,13 @@ class DualTouchRobot(BaseRobot):
         # right_value = 1-right_value
         if self.left_arm:
             try:
-                self.left_arm.setGripperPosition_raw(left_value)
+                self.left_arm.setGripperPosition(left_value)
             except Exception as e:  # noqa: BLE001
                 logger.error(f"设置左夹爪位置失败: {e}")
 
         if self.right_arm:
             try:
-                self.right_arm.setGripperPosition_raw(right_value)
+                self.right_arm.setGripperPosition(right_value)
             except Exception as e:  # noqa: BLE001
                 logger.error(f"设置右夹爪位置失败: {e}")
 
@@ -558,13 +558,13 @@ class DualTouchRobot(BaseRobot):
         # right_value = 1-right_value
         if self.left_arm:
             try:
-                self.left_arm.setGripperPosition_raw(left_value)
+                self.left_arm.setGripperPosition(left_value)
             except Exception as e:  # noqa: BLE001
                 logger.error(f"设置左夹爪位置失败: {e}")
 
         if self.right_arm:
             try:
-                self.right_arm.setGripperPosition_raw(right_value)
+                self.right_arm.setGripperPosition(right_value)
             except Exception as e:  # noqa: BLE001
                 logger.error(f"设置右夹爪位置失败: {e}")
 

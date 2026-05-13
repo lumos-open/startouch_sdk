@@ -37,13 +37,11 @@ class ArmController {
         double move_joint_waypoints(
             const std::vector<std::vector<double>>& waypoints,
             double time_sec = 0.0,
-            double speed_percent = -1.0,
-            double control_hz = 400.0);
+            double speed_percent = -1.0);
         double move_pose_waypoints(
             const std::vector<std::vector<double>>& poses,
             double time_sec = 0.0,
             double speed_percent = -1.0,
-            double control_hz = 400.0,
             double position_tolerance_m = 0.005,
             double orientation_tolerance_rad = 0.05);
         double move_l(
@@ -51,7 +49,6 @@ class ArmController {
             double time_sec = 0.0,
             double speed_percent = -1.0,
             double blend_radius_m = 0.0,
-            double control_hz = 400.0,
             double position_tolerance_m = 0.003,
             double orientation_tolerance_rad = 0.05);
         double move_p(
@@ -59,12 +56,9 @@ class ArmController {
             double time_sec = 0.0,
             double speed_percent = -1.0,
             double blend_radius_m = 0.002,
-            double control_hz = 400.0,
             double position_tolerance_m = 0.003,
             double orientation_tolerance_rad = 0.05);
-        double run_motion_program(
-            const std::vector<MotionProgramItem>& program,
-            double control_hz = 400.0);
+        double run_motion_program(const std::vector<MotionProgramItem>& program);
 
         // void set_joint_raw_ik(const std::vector<double>& q_end,const std::vector<double>& v_end, const std::vector<double>& q_now);
         void identify_gravity_compensation();

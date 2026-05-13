@@ -2,7 +2,14 @@ from typing import List, Tuple, Union, Optional, Dict, Any
 import numpy as np
 import os
 import sys
+import threading
+import time
 import startouch
+
+SDK_VERSION = "0.1.3"
+__version__ = SDK_VERSION
+DEFAULT_MOTION_SPEED_PERCENT = 0.1
+_GRIPPER_COMMAND_PERIOD_SEC = 0.005
 
 
 def quaternion_to_euler_wxyz(quat: np.ndarray) -> np.ndarray:
@@ -103,9 +110,20 @@ class MotionProgram:
         self._items = []
 
     @staticmethod
-    def _check_time_speed_exclusive(time_sec: float, speed_percent: float) -> None:
-        if time_sec > 0.0 and speed_percent > 0.0:
+    def _normalize_time_speed(time_sec: Optional[float], speed_percent: Optional[float]) -> Tuple[float, float]:
+        time_value = 0.0 if time_sec is None else float(time_sec)
+        speed_value = -1.0 if speed_percent is None else float(speed_percent)
+        has_time = time_value > 0.0
+        has_speed = speed_value > 0.0
+        if has_time and has_speed:
             raise ValueError("time_sec and speed_percent are mutually exclusive")
+        if time_value < 0.0:
+            raise ValueError("time_sec must be non-negative")
+        if has_speed and speed_value > 1.0:
+            raise ValueError("speed_percent must be in (0, 1]")
+        if not has_time and not has_speed:
+            speed_value = DEFAULT_MOTION_SPEED_PERCENT
+        return time_value, speed_value
 
     @staticmethod
     def _as_2d_points(values, width: int, name: str) -> List[List[float]]:
@@ -124,10 +142,10 @@ class MotionProgram:
     def movej(
         self,
         waypoints: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
     ) -> "MotionProgram":
-        self._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        time_sec, speed_percent = self._normalize_time_speed(time_sec, speed_percent)
         item = startouch.MotionProgramItem()
         item.type = "movej"
         item.waypoints = self._as_2d_points(waypoints, 6, "waypoint")
@@ -136,16 +154,16 @@ class MotionProgram:
         self._items.append(item)
         return self
 
-    def movel(
+    def movep(
         self,
         poses: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
-        blend_radius_m: float = 0.0,
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+        blend_radius_m: float = 0.002,
     ) -> "MotionProgram":
-        self._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        time_sec, speed_percent = self._normalize_time_speed(time_sec, speed_percent)
         item = startouch.MotionProgramItem()
-        item.type = "movel"
+        item.type = "movep"
         item.poses = self._as_2d_points(poses, 6, "pose")
         item.time_sec = float(time_sec)
         item.speed_percent = float(speed_percent)
@@ -153,16 +171,16 @@ class MotionProgram:
         self._items.append(item)
         return self
 
-    def movep(
+    def movel(
         self,
         poses: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
-        blend_radius_m: float = 0.002,
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+        blend_radius_m: float = 0.0,
     ) -> "MotionProgram":
-        self._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        time_sec, speed_percent = self._normalize_time_speed(time_sec, speed_percent)
         item = startouch.MotionProgramItem()
-        item.type = "movep"
+        item.type = "movel"
         item.poses = self._as_2d_points(poses, 6, "pose")
         item.time_sec = float(time_sec)
         item.speed_percent = float(speed_percent)
@@ -203,6 +221,90 @@ class SingleArm:
         self.arm = startouch.ArmController(can_interface = can_interface_,enable_fd = enable_fd_,gripper_exist  =gripper,
                                            permutation_matrix=permutation_matrix,pi_b =pi_b,pi_fr = pi_fr)
 
+    @staticmethod
+    def _parse_vla_frames(frames) -> Tuple[List[List[float]], List[float]]:
+        if isinstance(frames, dict):
+            if {"cmdpos", "cmdeulerrad", "cmdgripper"}.issubset(frames):
+                pos = np.asarray(frames["cmdpos"], dtype=float)
+                euler = np.asarray(frames["cmdeulerrad"], dtype=float)
+                gripper = np.asarray(frames["cmdgripper"], dtype=float).reshape(-1)
+                if pos.ndim == 1:
+                    pos = pos.reshape(1, 3)
+                if euler.ndim == 1:
+                    euler = euler.reshape(1, 3)
+                if pos.shape[1] != 3 or euler.shape[1] != 3:
+                    raise ValueError("cmdpos and cmdeulerrad must have shape (N, 3)")
+                if pos.shape[0] != euler.shape[0] or pos.shape[0] != gripper.shape[0]:
+                    raise ValueError("cmdpos, cmdeulerrad, and cmdgripper must have the same length")
+                poses = np.hstack([pos, euler])
+                return poses.tolist(), gripper.tolist()
+            if {"poses", "gripper"}.issubset(frames):
+                poses = np.asarray(frames["poses"], dtype=float)
+                gripper = np.asarray(frames["gripper"], dtype=float).reshape(-1)
+                if poses.ndim == 1:
+                    poses = poses.reshape(1, 6)
+                if poses.shape[1] != 6:
+                    raise ValueError("poses must have shape (N, 6)")
+                if poses.shape[0] != gripper.shape[0]:
+                    raise ValueError("poses and gripper must have the same length")
+                return poses.tolist(), gripper.tolist()
+            raise ValueError("frame dict must contain cmdpos/cmdeulerrad/cmdgripper or poses/gripper")
+
+        arr = np.asarray(frames, dtype=float)
+        if arr.ndim == 1:
+            if arr.shape[0] != 7:
+                raise ValueError("frame must have 7 values: [x, y, z, roll, pitch, yaw, gripper]")
+            arr = arr.reshape(1, 7)
+        elif arr.ndim == 2:
+            if arr.shape[1] != 7:
+                raise ValueError("frames must have shape (N, 7): pose6 plus gripper")
+        else:
+            raise ValueError("frames must be a 1D frame, 2D frame array, or dict")
+        return arr[:, :6].tolist(), arr[:, 6].tolist()
+
+    def _start_gripper_position_sync(
+        self,
+        gripper_positions: List[float],
+        duration_sec: Optional[float],
+    ) -> Tuple[threading.Event, Optional[threading.Thread]]:
+        stop_event = threading.Event()
+        values = np.asarray(gripper_positions, dtype=float).reshape(-1)
+        if len(values) == 0:
+            return stop_event, None
+        values = np.clip(values, 0.0, 1.0)
+
+        def sync_loop():
+            if duration_sec is None:
+                command_times = np.arange(len(values), dtype=float) * _GRIPPER_COMMAND_PERIOD_SEC
+                command_values = values
+            else:
+                sync_duration = max(0.0, float(duration_sec))
+                if len(values) == 1 or sync_duration <= 0.0:
+                    command_times = np.array([0.0])
+                    command_values = np.array([values[-1]])
+                else:
+                    command_times = np.linspace(0.0, sync_duration, len(values))
+                    command_values = values
+
+            if len(command_times) == 0:
+                command_times = np.array([0.0])
+                command_values = np.array([values[-1]])
+
+            start_time = time.monotonic()
+            for command_time, value in zip(command_times, command_values):
+                if stop_event.is_set():
+                    break
+                wait_sec = start_time + float(command_time) - time.monotonic()
+                if wait_sec > 0.0 and stop_event.wait(wait_sec):
+                    break
+                if stop_event.is_set():
+                    break
+                self.setGripperPosition(float(value))
+
+        thread = threading.Thread(target=sync_loop, daemon=True)
+        thread.start()
+        return stop_event, thread
+
 
     def go_home(self) -> bool:
         """
@@ -225,7 +327,6 @@ class SingleArm:
         self,
         positions: Union[List[float], np.ndarray],  # Shape: (num_joints, 单位rad)
         tf: float = 2.0,  # 默认时间：4.0秒
-        ctrl_hz: float = 400.0,  # 默认控制频率：300.0Hz
     ) -> bool:
         """
         Move the arm to the given joint position(s).
@@ -236,8 +337,6 @@ class SingleArm:
         带有时间规划的多项式
 
         """
-        # Current pybind interface only accepts q_end and tf.
-        _ = ctrl_hz
         self.arm.set_joint(q_end=positions, tf=tf)
         return True
 
@@ -259,78 +358,98 @@ class SingleArm:
         self.arm.set_joint_raw(q_end = positions,v_end = velocities)
         return True
 
-    def move_joint_waypoints(
+    def set_joint_waypoints(
         self,
         waypoints: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
-        ctrl_hz: float = 400.0,
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
     ) -> float:
-        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
         return self.arm.move_joint_waypoints(
             waypoints=MotionProgram._as_2d_points(waypoints, 6, "waypoint"),
             time_sec=time_sec,
             speed_percent=speed_percent,
-            control_hz=ctrl_hz,
         )
 
-    def move_pose_waypoints(
+    def move_joint_waypoints(
         self,
-        poses: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
-        ctrl_hz: float = 400.0,
-        position_tolerance_m: float = 0.005,
-        orientation_tolerance_rad: float = 0.05,
+        waypoints: Union[List[List[float]], np.ndarray],
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
     ) -> float:
-        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
-        return self.arm.move_pose_waypoints(
-            poses=MotionProgram._as_2d_points(poses, 6, "pose"),
+        return self.set_joint_waypoints(
+            waypoints,
             time_sec=time_sec,
             speed_percent=speed_percent,
-            control_hz=ctrl_hz,
-            position_tolerance_m=position_tolerance_m,
-            orientation_tolerance_rad=orientation_tolerance_rad,
-        )
-
-    def move_l(
-        self,
-        poses: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
-        blend_radius_m: float = 0.0,
-        ctrl_hz: float = 400.0,
-        position_tolerance_m: float = 0.003,
-        orientation_tolerance_rad: float = 0.05,
-    ) -> float:
-        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
-        return self.arm.move_l(
-            poses=MotionProgram._as_2d_points(poses, 6, "pose"),
-            time_sec=time_sec,
-            speed_percent=speed_percent,
-            blend_radius_m=blend_radius_m,
-            control_hz=ctrl_hz,
-            position_tolerance_m=position_tolerance_m,
-            orientation_tolerance_rad=orientation_tolerance_rad,
         )
 
     def move_p(
         self,
         poses: Union[List[List[float]], np.ndarray],
-        time_sec: float = 0.0,
-        speed_percent: float = -1.0,
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
         blend_radius_m: float = 0.002,
-        ctrl_hz: float = 400.0,
         position_tolerance_m: float = 0.003,
         orientation_tolerance_rad: float = 0.05,
     ) -> float:
-        MotionProgram._check_time_speed_exclusive(float(time_sec), float(speed_percent))
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
         return self.arm.move_p(
             poses=MotionProgram._as_2d_points(poses, 6, "pose"),
             time_sec=time_sec,
             speed_percent=speed_percent,
             blend_radius_m=blend_radius_m,
-            control_hz=ctrl_hz,
+            position_tolerance_m=position_tolerance_m,
+            orientation_tolerance_rad=orientation_tolerance_rad,
+        )
+
+    def move_p_with_gripper(
+        self,
+        frames,
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+        blend_radius_m: float = 0.002,
+        position_tolerance_m: float = 0.003,
+        orientation_tolerance_rad: float = 0.05,
+    ) -> float:
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
+        poses, gripper_positions = self._parse_vla_frames(frames)
+        if len(poses) != len(gripper_positions):
+            raise ValueError("poses and gripper positions must have the same length")
+        stop_event, gripper_thread = self._start_gripper_position_sync(
+            gripper_positions,
+            duration_sec=float(time_sec) if time_sec > 0.0 else None,
+        )
+        try:
+            duration = self.move_p(
+                poses,
+                time_sec=time_sec if time_sec > 0.0 else None,
+                speed_percent=speed_percent if speed_percent > 0.0 else None,
+                blend_radius_m=blend_radius_m,
+                position_tolerance_m=position_tolerance_m,
+                orientation_tolerance_rad=orientation_tolerance_rad,
+            )
+        finally:
+            stop_event.set()
+            if gripper_thread is not None:
+                gripper_thread.join(timeout=1.0)
+        self.setGripperPosition(float(np.clip(gripper_positions[-1], 0.0, 1.0)))
+        return duration
+
+    def move_l(
+        self,
+        poses: Union[List[List[float]], np.ndarray],
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+        blend_radius_m: float = 0.0,
+        position_tolerance_m: float = 0.003,
+        orientation_tolerance_rad: float = 0.05,
+    ) -> float:
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
+        return self.arm.move_l(
+            poses=MotionProgram._as_2d_points(poses, 6, "pose"),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            blend_radius_m=blend_radius_m,
             position_tolerance_m=position_tolerance_m,
             orientation_tolerance_rad=orientation_tolerance_rad,
         )
@@ -338,10 +457,9 @@ class SingleArm:
     def run_motion_program(
         self,
         program: Union[MotionProgram, List[Any]],
-        ctrl_hz: float = 400.0,
     ) -> float:
         items = program.items if isinstance(program, MotionProgram) else program
-        return self.arm.run_motion_program(items, control_hz=ctrl_hz)
+        return self.arm.run_motion_program(items)
 
 
     # 带时间规划
@@ -490,12 +608,6 @@ class SingleArm:
         self.arm.closeGripper()
         return True
 
-    def setGripperPosition_raw(self, position:float) -> bool:
-        #角度透传模式   不规划
-        #设置夹爪开合程度  0是闭合 1是开合
-        self.arm.setGripperPosition_raw(position)
-        return True
-    
     def setGripperPosition(self, position:float) -> bool:
         #设置夹爪开合程度  0是闭合 1是开合  #设置0时有点问题，有提示
         self.arm.setGripperPosition(position)

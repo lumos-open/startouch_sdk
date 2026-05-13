@@ -59,11 +59,9 @@ def run_case(arm, case, speed_percent, wait_s):
     print(f"\n[SELF-COLLISION] {case['name']}")
     print(case["desc"])
     try:
-        arm.move_joint_waypoints(
+        arm.set_joint_waypoints(
             case["waypoints"],
-            time_sec=0.0,
             speed_percent=speed_percent,
-            ctrl_hz=400.0,
         )
     except Exception as exc:
         print(f"保护已触发/轨迹被拒绝: {exc}")

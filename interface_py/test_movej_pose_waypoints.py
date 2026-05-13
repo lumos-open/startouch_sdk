@@ -25,7 +25,7 @@ def print_poses(poses):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Test move_pose_waypoints in MOVEJ_POSE mode.")
+    parser = argparse.ArgumentParser(description="Test public MoveP Cartesian pose execution.")
     parser.add_argument("can_interface", nargs="?", default="can0")
     parser.add_argument("--dx", type=float, default=0.015, help="Small TCP x offset in meters")
     parser.add_argument("--dz", type=float, default=0.010, help="Small TCP z offset in meters")
@@ -54,11 +54,15 @@ def main():
         time.sleep(0.2)
         poses = make_poses_from_current(arm, args.dx, args.dz)
         print_poses(poses)
-        arm.move_pose_waypoints(
+        motion_kwargs = (
+            {"speed_percent": args.speed_percent}
+            if args.speed_percent > 0.0
+            else {"time_sec": args.time_sec}
+        )
+        arm.move_p(
             poses,
-            time_sec=args.time_sec,
-            speed_percent=args.speed_percent,
-            ctrl_hz=400.0,
+            **motion_kwargs,
+            blend_radius_m=0.0,
             position_tolerance_m=args.position_tolerance_m,
             orientation_tolerance_rad=args.orientation_tolerance_rad,
         )

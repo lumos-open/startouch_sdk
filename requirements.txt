@@ -11,3 +11,5 @@ matplotlib
 opencv-python
 pillow
 h5py
+jinja2
+typeguard

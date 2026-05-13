@@ -26,11 +26,13 @@ MOVE_P_ORIENTATION_TOLERANCE_RAD = 0.015
 MOVE_P_INTERVAL = 1
 MOVE_P_CONTROL_HZ = 400.0
 GRIPPER_SYNC_HZ = 200.0
+ZERO_JOINTS = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 DEFAULT_DUAL_MULTI_SESSION_DIR = Path("/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_20260430")
 
 _active_arms = []
 _cleanup_started = threading.Event()
 _shutdown_requested = threading.Event()
+_return_home_started = threading.Event()
 
 
 def request_shutdown(signum=None, frame=None):
@@ -48,6 +50,57 @@ def cleanup_active_arms():
             arm.cleanup()
         except Exception:
             traceback.print_exc()
+
+
+def return_dual_arms_to_zero_after_interrupt(left_can_port, right_can_port):
+    if _return_home_started.is_set():
+        return
+    _return_home_started.set()
+    print(
+        "中断当前动作后左右臂回到0位: "
+        f"left={left_can_port}, right={right_can_port}, time_sec={MOVE_TO_ZERO_TIME_SEC}"
+    )
+    cleanup_active_arms()
+    time.sleep(0.2)
+    home_arms = []
+    try:
+        left_home = SingleArm(can_interface_=left_can_port, gripper=True, enable_fd_=False)
+        right_home = SingleArm(can_interface_=right_can_port, gripper=True, enable_fd_=False)
+        home_arms = [left_home, right_home]
+
+        errors = []
+
+        def go_home(label, arm):
+            try:
+                arm.set_joint_waypoints([ZERO_JOINTS], time_sec=MOVE_TO_ZERO_TIME_SEC)
+                arm.setGripperDistance(0.085)
+            except BaseException as exc:  # noqa: BLE001
+                errors.append((label, exc))
+
+        threads = [
+            threading.Thread(target=go_home, args=("left", left_home), daemon=True),
+            threading.Thread(target=go_home, args=("right", right_home), daemon=True),
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        if errors:
+            for label, exc in errors:
+                print(f"{label} arm 回到0位失败: {exc}")
+            print("回到0位未完全成功，请人工确认机械臂状态。")
+        else:
+            print("左右臂已回到0位。")
+    except Exception:
+        print("回到0位失败，请人工确认机械臂状态。")
+        traceback.print_exc()
+    finally:
+        for arm in home_arms:
+            try:
+                arm.cleanup()
+            except Exception:
+                traceback.print_exc()
 
 
 def run_interruptible_arm_call(call_fn, *args, **kwargs):
@@ -80,7 +133,7 @@ def run_interruptible_arm_call(call_fn, *args, **kwargs):
 
 
 def move_joint_waypoints_interruptible(arm, waypoints, **kwargs):
-    return run_interruptible_arm_call(arm.move_joint_waypoints, waypoints, **kwargs)
+    return run_interruptible_arm_call(arm.set_joint_waypoints, waypoints, **kwargs)
 
 
 def move_p_interruptible(arm, poses, **kwargs):
@@ -308,7 +361,6 @@ def replay_movep_with_original_timing(
                 sampled_pose.tolist(),
                 time_sec=total_time,
                 blend_radius_m=blend_radius_m,
-                ctrl_hz=MOVE_P_CONTROL_HZ,
                 position_tolerance_m=position_tolerance_m,
                 orientation_tolerance_rad=orientation_tolerance_rad,
             )
@@ -436,6 +488,8 @@ if __name__ == "__main__":
                 print("⚠️ StarTouch 未启用，未执行轨迹回放。")
     except KeyboardInterrupt:
         print("\n⏹ 已退出轨迹回放选择。")
+        if config["StarTouch"]["enable"]:
+            return_dual_arms_to_zero_after_interrupt(left_can_port, right_can_port)
     except Exception as e:
         print(f"\n[ERROR] MoveP 轨迹回放失败: {e}")
         traceback.print_exc()

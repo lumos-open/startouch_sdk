@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-基于 startouch 控制的单臂轨迹复现脚本（支持按 Q 安全退出，退出后仍会绘图并归位）
+基于 startouch waypoint 控制的单臂轨迹复现脚本（支持按 Q 安全退出，退出后仍会绘图并归位）
 
 轨迹格式：每行 timestamp x y z qx qy qz qw（xyzw）
 夹爪格式：TUM 每行 timestamp value（0~clamp_max），映射为 startouch 的 0..1
@@ -13,6 +13,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R, Slerp
 from tqdm import tqdm
 import os
+from dataclasses import dataclass
 
 from startouchclass import SingleArm, euler_to_quaternion
 
@@ -178,13 +179,15 @@ def load_clamp_tum(path):
     return np.array(ts), np.array(vals) if ts else (np.array([]), np.array([]))
 
 
-def align_clamp_to_trajectory(traj_timestamps, clamp_ts, clamp_vals, clamp_max=90.0):
+def align_clamp_to_trajectory(traj_timestamps, clamp_ts, clamp_vals, clamp_max=85.0):
     if len(clamp_ts) == 0 or len(clamp_vals) == 0:
         return None
     idx = np.argmin(np.abs(clamp_ts[:, None] - traj_timestamps[None, :]), axis=0)
     vals = np.clip(clamp_vals[idx].astype(np.float64), 0, clamp_max)
     frac = (clamp_max - vals) / clamp_max
     return np.clip(frac, 0.0, 1.0)
+    # frac = vals / 1000
+    # return np.clip(frac, 0.0, 0.085)
 
 
 def build_T_base_to_local(base_x, base_y, base_z, base_roll_deg, base_pitch_deg, base_yaw_deg):
@@ -223,7 +226,71 @@ def trajectory_to_startouch(traj, T_base_to_local=None):
     return out
 
 
-def interpolate_and_move(arm: SingleArm, start_pos, start_quat_wxyz, target_pos, target_quat_wxyz, step_size=0.01, dt=0.04):
+def estimate_dt_from_timestamps(timestamps: np.ndarray, fallback_dt: float = 0.01) -> float:
+    if timestamps is None or len(timestamps) < 2:
+        return fallback_dt
+    diffs = np.diff(timestamps.astype(float))
+    diffs = diffs[np.isfinite(diffs) & (diffs > 0)]
+    if len(diffs) == 0:
+        return fallback_dt
+    return float(np.median(diffs))
+
+
+def trajectory_duration_from_timestamps(timestamps: np.ndarray, fallback_dt: float = 0.01) -> float:
+    if timestamps is None or len(timestamps) < 2:
+        return fallback_dt
+    t0 = float(timestamps[0])
+    t1 = float(timestamps[-1])
+    duration = t1 - t0
+    if not np.isfinite(duration) or duration <= 0.0:
+        return max((len(timestamps) - 1) * fallback_dt, fallback_dt)
+    return duration
+
+
+@dataclass
+class MotionThreadResult:
+    planned_duration_s: float = 0.0
+    error: Exception | None = None
+
+
+def start_waypoint_motion_thread(
+    arm: SingleArm,
+    joint_waypoints,
+    time_sec: float,
+    speed_percent: float,
+) -> tuple[threading.Thread, MotionThreadResult]:
+    result = MotionThreadResult()
+
+    def runner():
+        try:
+            motion_kwargs = {"time_sec": time_sec} if time_sec > 0.0 else {"speed_percent": speed_percent}
+            result.planned_duration_s = arm.set_joint_waypoints(
+                joint_waypoints,
+                **motion_kwargs,
+            )
+        except Exception as exc:
+            result.error = exc
+
+    thread = threading.Thread(target=runner, daemon=False)
+    thread.start()
+    return thread, result
+
+
+def solve_joint_waypoints(arm: SingleArm, poses):
+    q_seed = list(arm.get_joint_positions())
+    joint_points = []
+    for i, (pos, quat_wxyz) in enumerate(poses):
+        q_w, q_x, q_y, q_z = quat_wxyz
+        euler = R.from_quat([q_x, q_y, q_z, q_w]).as_euler('xyz')
+        q, ok = arm.arm.solve_ik(list(pos), list(euler), q_seed)
+        if not ok:
+            raise RuntimeError(f'IK failed at step {i}: pos={pos}, euler={euler.tolist()}')
+        q_seed = list(q)
+        joint_points.append(q_seed)
+    return joint_points
+
+
+def interpolate_and_move(arm: SingleArm, start_pos, start_quat_wxyz, target_pos, target_quat_wxyz, step_size=0.001, dt=0.04):
     """返回 True 表示正常完成，False 表示被用户中断"""
     p0 = np.asarray(start_pos, dtype=float)
     p1 = np.asarray(target_pos, dtype=float)
@@ -267,11 +334,12 @@ def main():
     parser = argparse.ArgumentParser(description='单臂轨迹复现（startouch，按Q结束回放但仍绘图归位）')
     parser.add_argument('--left_file', type=str, default='/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_daoshui/session_101347/Merged_Trajectory/merged_trajectory.txt')
     parser.add_argument('--replay_dir', type=str, default='')
-    parser.add_argument('--left_clamp_file', type=str, default='/home/zgy/FastUMI_Touch_test/data_trajectory/session_091619/right_hand_250801DR48FP26001130/Merged_Trajectory/Clamp_Data/clamp_data_tum.txt')
-    parser.add_argument('--dt', type=float, default=0.02)
+    parser.add_argument('--left_clamp_file', type=str, default='/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_daoshui/session_101347/Clamp_Data/clamp_data_tum.txt')
+    parser.add_argument('--dt', type=float, default=0.01)
     parser.add_argument('--interp_step_size', type=float, default=0.001)
+    # parser.add_argument('--interp_step_size', type=float, default=0.0001)
     parser.add_argument('--gripper', type=float, default=0.0)
-    parser.add_argument('--clamp_max', type=float, default=90.0)
+    parser.add_argument('--clamp_max', type=float, default=85.0)
     parser.add_argument('--no_gripper', action='store_true')
     parser.add_argument('--dry_run', action='store_true')
     parser.add_argument('--debug_interp', action='store_true')
@@ -287,7 +355,14 @@ def main():
     parser.add_argument('--no_plot', action='store_true')
     parser.add_argument('--plot_out', type=str, default='replay_xyz_compare.png')
     parser.add_argument('--plot_show', action='store_true')
+    parser.add_argument('--waypoint_speed_percent', type=float, default=-1.0)
     args = parser.parse_args()
+
+    if args.waypoint_speed_percent > 0.0:
+        print(
+            f'固定时间回放要求使用 time_sec；忽略 waypoint_speed_percent={args.waypoint_speed_percent}'
+        )
+        args.waypoint_speed_percent = -1.0
 
     left_path = os.path.join(args.replay_dir, args.left_file)
     print(f"左臂轨迹文件: {left_path}")
@@ -310,6 +385,11 @@ def main():
     poses_left = trajectory_to_startouch(left_traj, T_base_to_local)
     n_steps = len(poses_left)
     print(f'轨迹步数: {n_steps}')
+    data_dt = estimate_dt_from_timestamps(left_traj[:, 0], fallback_dt=args.dt)
+    args.dt = data_dt
+    print(f'使用轨迹时间间隔 dt={args.dt:.6f}s')
+    waypoint_time = trajectory_duration_from_timestamps(left_traj[:, 0], fallback_dt=args.dt)
+    print(f'使用轨迹总时间 time_sec={waypoint_time:.6f}s（按首尾 timestamp 对齐）')
 
     gripper_left_arr = None
     if os.path.isfile(left_clamp_path):
@@ -381,6 +461,16 @@ def main():
             # 没有轨迹数据，直接跳转到归位
         else:
             print('开始复现轨迹...')
+            print('预解 IK waypoints...')
+            joint_waypoints = solve_joint_waypoints(left_arm, poses_left)
+            print(f'下发 waypoint 轨迹: points={len(joint_waypoints)}, time_sec={waypoint_time:.6f}s')
+            start_time = time.monotonic()
+            motion_thread, motion_result = start_waypoint_motion_thread(
+                left_arm,
+                joint_waypoints,
+                time_sec=waypoint_time,
+                speed_percent=args.waypoint_speed_percent,
+            )
             with tqdm(total=n_steps, desc='复现轨迹', unit='步') as pbar:
                 for i in range(n_steps):
                     if is_quit_requested():
@@ -388,7 +478,6 @@ def main():
                         break
 
                     pl, ql = poses_left[i]
-                    left_arm.set_end_effector_pose_quat_raw(pos=pl, quat=ql)
 
                     qL_w, qL_x, qL_y, qL_z = ql
                     cmd_rpy[i] = R.from_quat([qL_x, qL_y, qL_z, qL_w]).as_euler('xyz')
@@ -398,13 +487,21 @@ def main():
                         gl = float(gripper_left_arr[i]) if gripper_left_arr is not None else default_gripper
                         left_arm.setGripperPosition(gl)
 
-                    time.sleep(args.dt)
+                    target_time = start_time + i * args.dt
+                    sleep_s = target_time - time.monotonic()
+                    if sleep_s > 0:
+                        time.sleep(sleep_s)
 
                     pos_l, rpy_l = left_arm.get_ee_pose_euler()
                     act_xyz[i] = np.asarray(pos_l, dtype=float).reshape(3)
                     act_rpy[i] = np.asarray(rpy_l, dtype=float).reshape(3)
                     executed_steps = i + 1
                     pbar.update(1)
+
+            motion_thread.join()
+            if motion_result.error is not None:
+                raise motion_result.error
+            print(f'waypoint 轨迹执行完成: planned_duration_s={motion_result.planned_duration_s:.6f}s')
 
         # 绘图（使用实际记录的步数）
         if not args.no_plot and executed_steps > 0:

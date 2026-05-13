@@ -76,11 +76,14 @@ def main():
         print(f"Running case: {args.case}")
         print(case["desc"])
         try:
-            arm.move_joint_waypoints(
+            motion_kwargs = (
+                {"time_sec": case["time_sec"]}
+                if case["time_sec"] > 0.0
+                else {"speed_percent": case["speed_percent"]}
+            )
+            arm.set_joint_waypoints(
                 case["waypoints"],
-                time_sec=case["time_sec"],
-                speed_percent=case["speed_percent"],
-                ctrl_hz=400.0,
+                **motion_kwargs,
             )
         except Exception as exc:
             print(f"接口拒绝/保护触发: {exc}")

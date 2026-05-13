@@ -26,10 +26,12 @@ MOVE_P_ORIENTATION_TOLERANCE_RAD = 0.008
 MOVE_P_INTERVAL = 1
 MOVE_P_CONTROL_HZ = 400.0
 GRIPPER_SYNC_HZ = 50.0
+ZERO_JOINTS = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 _active_arm = None
 _cleanup_started = threading.Event()
 _shutdown_requested = threading.Event()
+_return_home_started = threading.Event()
 
 
 def request_shutdown(signum=None, frame=None):
@@ -47,6 +49,30 @@ def cleanup_active_arm():
         _active_arm.cleanup()
     except Exception:
         traceback.print_exc()
+
+
+def return_arm_to_zero_after_interrupt(can_port):
+    if _return_home_started.is_set():
+        return
+    _return_home_started.set()
+    print(f"中断当前动作后回到0位: can={can_port}, time_sec={MOVE_TO_ZERO_TIME_SEC}")
+    cleanup_active_arm()
+    time.sleep(0.2)
+    home_arm = None
+    try:
+        home_arm = SingleArm(can_interface_=can_port, gripper=True, enable_fd_=False)
+        home_arm.set_joint_waypoints([ZERO_JOINTS], time_sec=MOVE_TO_ZERO_TIME_SEC)
+        home_arm.setGripperDistance(0.085)
+        print("已回到0位。")
+    except Exception:
+        print("回到0位失败，请人工确认机械臂状态。")
+        traceback.print_exc()
+    finally:
+        if home_arm is not None:
+            try:
+                home_arm.cleanup()
+            except Exception:
+                traceback.print_exc()
 
 
 def run_interruptible_arm_call(call_fn, *args, **kwargs):
@@ -79,7 +105,7 @@ def run_interruptible_arm_call(call_fn, *args, **kwargs):
 
 
 def move_joint_waypoints_interruptible(arm, waypoints, **kwargs):
-    return run_interruptible_arm_call(arm.move_joint_waypoints, waypoints, **kwargs)
+    return run_interruptible_arm_call(arm.set_joint_waypoints, waypoints, **kwargs)
 
 
 def move_p_interruptible(arm, poses, **kwargs):
@@ -237,7 +263,6 @@ def replay_movep_with_original_timing(
                 sampled_pose.tolist(),
                 time_sec=total_time,
                 blend_radius_m=blend_radius_m,
-                ctrl_hz=MOVE_P_CONTROL_HZ,
                 position_tolerance_m=position_tolerance_m,
                 orientation_tolerance_rad=orientation_tolerance_rad,
             )
@@ -326,6 +351,8 @@ if __name__ == "__main__":
                 print("⚠️ StarTouch 未启用，未执行轨迹回放。")
     except KeyboardInterrupt:
         print("\n⏹ 已退出轨迹回放选择。")
+        if config["StarTouch"]["enable"]:
+            return_arm_to_zero_after_interrupt(can_port)
     except Exception as e:
         print(f"\n[ERROR] MoveP 轨迹回放失败: {e}")
         traceback.print_exc()

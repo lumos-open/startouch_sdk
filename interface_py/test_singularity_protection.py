@@ -68,15 +68,13 @@ def run_case(arm, case, speed_percent, wait_s):
     print(f"\n[SINGULARITY] {case['name']}")
     print(case["desc"])
     print("Expected logs:")
-    print("  - [move_joint_waypoints] safety warning ... speed_scale=... means yellow-zone slowdown")
-    print("  - [move_joint_waypoints] inserted singularity avoidance waypoint ... means auto bypass")
+    print("  - [set_joint_waypoints] safety warning ... speed_scale=... means yellow-zone slowdown")
+    print("  - [set_joint_waypoints] inserted singularity avoidance waypoint ... means auto bypass")
     print("  - singularity_stop means the trajectory was rejected after bypass attempts")
     try:
-        arm.move_joint_waypoints(
+        arm.set_joint_waypoints(
             case["waypoints"],
-            time_sec=0.0,
             speed_percent=speed_percent,
-            ctrl_hz=400.0,
         )
     except Exception as exc:
         print(f"保护已触发/轨迹被拒绝: {exc}")

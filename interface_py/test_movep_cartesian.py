@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import time
 
 import numpy as np
@@ -7,7 +8,6 @@ from startouchclass import MotionProgram, SingleArm
 
 
 # ===== User config =====
-EXECUTE = True
 CAN_INTERFACE = "can0"
 USE_MOTION_PROGRAM = True
 USE_TIME_MODE = True
@@ -54,17 +54,22 @@ def print_poses(name, poses):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Test MoveP Cartesian path execution.")
+    parser.add_argument("can_interface", nargs="?", default=CAN_INTERFACE)
+    parser.add_argument("--execute", action="store_true", help="Actually connect to robot and execute")
+    args = parser.parse_args()
+
     print("MoveP Cartesian test")
     print("Path: multi-pose Cartesian path with blend radius; quaternion slerp orientation.")
     print(
-        f"EXECUTE={EXECUTE}, USE_MOTION_PROGRAM={USE_MOTION_PROGRAM}, "
+        f"EXECUTE={args.execute}, USE_MOTION_PROGRAM={USE_MOTION_PROGRAM}, "
         f"USE_TIME_MODE={USE_TIME_MODE}, blend_radius_m={BLEND_RADIUS_M}"
     )
-    if not EXECUTE:
-        print("Dry run only. Set EXECUTE = True in this file to run on hardware.")
+    if not args.execute:
+        print("Dry run only. Add --execute to run on hardware.")
         return
 
-    arm = SingleArm(can_interface_=CAN_INTERFACE, enable_fd_=False)
+    arm = SingleArm(can_interface_=args.can_interface, enable_fd_=False)
     try:
         time.sleep(0.2)
         poses = build_movep_poses_from_current(arm)

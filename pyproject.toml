@@ -6,7 +6,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fastouch_sdk"
-version = "0.1.2"
+version = "0.1.3"
 description = "Precompiled Fastouch robot SDK"
 readme = "README_INSTALL.md"
 authors = [
@@ -28,6 +28,8 @@ dependencies = [
   "opencv-python",
   "pillow",
   "h5py",
+  "jinja2",
+  "typeguard",
 ]
 requires-python = ">= 3.8"
 
@@ -44,11 +46,6 @@ test = [
 bugs = "https://github.com/BestManRobotics/BestMan_Touch/issues"
 changelog = "https://github.com/BestManRobotics/BestMan_Touch/blob/master/changelog.md"
 homepage = "https://github.com/BestManRobotics/BestMan_Touch"
-
-[project.scripts]
-  fastouch_sdk = "fastouch_python_sdk.cli:app"
-
-
 
 [tool.scikit-build]
 cmake.args = ["-DCMAKE_BUILD_TYPE=Release"]

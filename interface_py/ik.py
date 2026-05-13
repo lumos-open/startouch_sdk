@@ -66,7 +66,7 @@ def send_pose_to_all(pos_, euler_):
 
 def send_gripper_to_all(gripper_pos_):
     for arm in arm_controllers:
-        arm.setGripperPosition_raw(gripper_pos_)
+        arm.setGripperPosition(gripper_pos_)
 
 
 def go_home_all():
@@ -75,7 +75,7 @@ def go_home_all():
 
 
 def get_initial_pose():
-    default_pos = np.array([0.25, 0.0, 0.175], dtype=float)
+    default_pos = np.array([0.2833, 0.0, 0.17605], dtype=float)
     default_euler = np.array([0.0, 0.0, 0.0], dtype=float)
     try:
         pos_, euler_ = arm_controllers[0].get_ee_pose_euler()
