@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from startouchclass import SingleArm
+from startouchclass import SingleArm, euler_to_quaternion
 from tcp_compensation import tcp_position_to_flange
 
 
@@ -26,10 +26,14 @@ TRAJ_GLOB = "inferenceTraj_20260509_170209.txt"
 REPLAY_POSE_SOURCE = "cmd_flange"
 TCP_OFFSET_XYZ = [0.0, 0.0, 0.0]
 
+# "cartesian" uses move_p/move_p_with_gripper and checks Cartesian interpolation
+# reachability. "joint_waypoints" matches the older vla_replay_waypoints path:
+# solve IK only at logged frames, then send one joint waypoint trajectory.
+EXECUTION_MODE = "joint_waypoints"
 USE_TIME_MODE = True
 ENABLE_GRIPPER_REPLAY = False
 GROUP_SIZE = 30
-GROUP_BY_STEP_IDX_RESET = True
+GROUP_BY_STEP_IDX_RESET = False
 DEFAULT_GROUP_TIME_SEC = 10.0
 GROUP_TIME_SECS = [
     10.0,
@@ -44,6 +48,8 @@ MOVE_TO_FIRST_POSE_SPEED_PERCENT = 1
 ZERO_JOINTS = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 RETURN_HOME_TIME_SEC = 3.0
 MAX_FRAMES = 0
+LOW_Z_WARN_M = 0.06
+LARGE_BOUNDARY_JUMP_WARN_M = 0.02
 
 
 @dataclass
@@ -142,6 +148,100 @@ def frame_groups(entries, group_size):
         yield start, frames[start:start + group_size]
 
 
+def print_data_diagnostics(entries, groups):
+    frames = [frame for _step_idx, frame in entries]
+    if not frames:
+        return
+    z_values = [frame[2] for frame in frames]
+    print(f"z range: min={min(z_values):.4f}m, max={max(z_values):.4f}m")
+    if min(z_values) < LOW_Z_WARN_M:
+        print(
+            "WARNING: trajectory contains low-z Cartesian targets; "
+            "move_p may reject or shake if these poses are outside the reachable workspace."
+        )
+
+    for group_idx, (start, group) in enumerate(groups, 1):
+        group_z = [frame[2] for frame in group]
+        print(
+            f"group {group_idx}: rows {start}..{start + len(group) - 1}, "
+            f"points={len(group)}, z_min={min(group_z):.4f}, z_max={max(group_z):.4f}"
+        )
+
+    for i in range(1, len(frames)):
+        prev_frame = frames[i - 1]
+        frame = frames[i]
+        jump = math.sqrt(sum((frame[j] - prev_frame[j]) ** 2 for j in range(3)))
+        if jump > LARGE_BOUNDARY_JUMP_WARN_M:
+            print(
+                f"WARNING: large Cartesian jump at rows {i - 1}->{i}: "
+                f"{jump:.4f}m, z {prev_frame[2]:.4f}->{frame[2]:.4f}"
+            )
+
+
+def solve_joint_waypoints(arm, frames):
+    q_seed = list(arm.get_joint_positions())
+    joint_points = []
+    for idx, frame in enumerate(frames):
+        quat_wxyz = euler_to_quaternion(frame[3], frame[4], frame[5])
+        q, ok = arm.solve_ik(frame[:3], quat_wxyz, q_seed=q_seed)
+        if not ok:
+            raise RuntimeError(f"IK failed at frame {idx}: pos={frame[:3]}, euler={frame[3:6]}")
+        q_seed = list(q)
+        joint_points.append(q_seed)
+    return joint_points
+
+
+def run_gripper_timeline_thread(arm, gripper_positions, duration_sec, stop_requested):
+    def worker():
+        values = [float(min(1.0, max(0.0, value))) for value in gripper_positions]
+        if not values:
+            return
+        if len(values) == 1 or duration_sec <= 0.0:
+            arm.setGripperPosition(values[-1])
+            return
+        start_time = time.monotonic()
+        last_idx = -1
+        while not stop_requested.is_set():
+            elapsed = time.monotonic() - start_time
+            ratio = min(1.0, elapsed / duration_sec)
+            idx = min(len(values) - 1, int(round(ratio * (len(values) - 1))))
+            if idx != last_idx:
+                arm.setGripperPosition(values[idx])
+                last_idx = idx
+            if ratio >= 1.0:
+                break
+            time.sleep(0.005)
+        arm.setGripperPosition(values[-1])
+
+    thread = threading.Thread(target=worker, daemon=True)
+    thread.start()
+    return thread
+
+
+def run_joint_waypoints_with_optional_gripper(arm, group, time_sec, speed_percent, stop_requested):
+    joint_points = solve_joint_waypoints(arm, group)
+    gripper_thread = None
+    if ENABLE_GRIPPER_REPLAY and time_sec is not None:
+        gripper_thread = run_gripper_timeline_thread(
+            arm,
+            [frame[6] for frame in group],
+            float(time_sec),
+            stop_requested,
+        )
+    try:
+        duration = arm.set_joint_waypoints(
+            joint_points,
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+        )
+    finally:
+        if gripper_thread is not None:
+            gripper_thread.join(timeout=1.0)
+    if ENABLE_GRIPPER_REPLAY:
+        arm.setGripperPosition(group[-1][6])
+    return duration
+
+
 def run_motion_thread(call_fn, *args, **kwargs):
     result = MotionResult()
 
@@ -200,6 +300,8 @@ def main():
         raise ValueError("MOVE_TO_FIRST_POSE_SPEED_PERCENT must be in (0, 1] in speed mode")
     if not USE_TIME_MODE and not (0.0 < SPEED_PERCENT <= 1.0):
         raise ValueError("SPEED_PERCENT must be in (0, 1] in speed mode")
+    if EXECUTION_MODE not in ("cartesian", "joint_waypoints"):
+        raise ValueError("EXECUTION_MODE must be 'cartesian' or 'joint_waypoints'")
 
     stop_requested = threading.Event()
     cleanup_started = threading.Event()
@@ -219,11 +321,13 @@ def main():
 
     print(f"using trajectory: {traj_file}")
     print(f"frames: {len(frames)}, group_size={GROUP_SIZE}, pause={GROUP_PAUSE_SEC}s")
+    print(f"grouping: {'step_idx reset' if GROUP_BY_STEP_IDX_RESET else 'fixed row count'}")
     print(f"pose source: {REPLAY_POSE_SOURCE}, tcp_offset_xyz={TCP_OFFSET_XYZ}")
     if USE_TIME_MODE:
         print(f"mode: time, default_group_time_sec={DEFAULT_GROUP_TIME_SEC}, group_time_secs={GROUP_TIME_SECS}")
     else:
         print(f"mode: speed, speed_percent={SPEED_PERCENT}")
+    print(f"execution mode: {EXECUTION_MODE}")
     print(f"gripper replay: {'enabled' if ENABLE_GRIPPER_REPLAY else 'disabled'}")
 
     arm = SingleArm(can_interface_=CAN_INTERFACE, enable_fd_=ENABLE_FD)
@@ -236,6 +340,7 @@ def main():
 
     try:
         groups = list(frame_groups(frames, GROUP_SIZE))
+        print_data_diagnostics(frames, groups)
         total_groups = len(groups)
         first_pose = groups[0][1][0][:6]
         current_pos, current_euler = arm.get_ee_pose_euler()
@@ -270,21 +375,41 @@ def main():
             if USE_TIME_MODE:
                 this_group_time_sec = group_time_sec(group_idx)
                 print(f"group {group_idx} time_sec={this_group_time_sec}")
-                call_fn = arm.move_p_with_gripper if ENABLE_GRIPPER_REPLAY else arm.move_p
-                call_data = group if ENABLE_GRIPPER_REPLAY else [frame[:6] for frame in group]
-                thread, result = run_motion_thread(
-                    call_fn,
-                    call_data,
-                    time_sec=this_group_time_sec,
-                )
+                if EXECUTION_MODE == "joint_waypoints":
+                    thread, result = run_motion_thread(
+                        run_joint_waypoints_with_optional_gripper,
+                        arm,
+                        group,
+                        this_group_time_sec,
+                        None,
+                        stop_requested,
+                    )
+                else:
+                    call_fn = arm.move_p_with_gripper if ENABLE_GRIPPER_REPLAY else arm.move_p
+                    call_data = group if ENABLE_GRIPPER_REPLAY else [frame[:6] for frame in group]
+                    thread, result = run_motion_thread(
+                        call_fn,
+                        call_data,
+                        time_sec=this_group_time_sec,
+                    )
             else:
-                call_fn = arm.move_p_with_gripper if ENABLE_GRIPPER_REPLAY else arm.move_p
-                call_data = group if ENABLE_GRIPPER_REPLAY else [frame[:6] for frame in group]
-                thread, result = run_motion_thread(
-                    call_fn,
-                    call_data,
-                    speed_percent=SPEED_PERCENT,
-                )
+                if EXECUTION_MODE == "joint_waypoints":
+                    thread, result = run_motion_thread(
+                        run_joint_waypoints_with_optional_gripper,
+                        arm,
+                        group,
+                        None,
+                        SPEED_PERCENT,
+                        stop_requested,
+                    )
+                else:
+                    call_fn = arm.move_p_with_gripper if ENABLE_GRIPPER_REPLAY else arm.move_p
+                    call_data = group if ENABLE_GRIPPER_REPLAY else [frame[:6] for frame in group]
+                    thread, result = run_motion_thread(
+                        call_fn,
+                        call_data,
+                        speed_percent=SPEED_PERCENT,
+                    )
             duration = wait_motion(thread, result, stop_requested)
             print(f"group {group_idx} done, planned_duration_s={duration:.3f}")
             interruptible_sleep(GROUP_PAUSE_SEC, stop_requested)
