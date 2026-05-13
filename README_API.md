@@ -2,7 +2,11 @@
 
 Current SDK version: `0.1.3`.
 
+Version note: `2026-05-13 20:40`, author `Charlie`.
+
 当前 SDK 版本：`0.1.3`。
+
+版本说明：`2026-05-13 20:40`，作者 `Charlie`。
 
 You can query it from Python:
 
