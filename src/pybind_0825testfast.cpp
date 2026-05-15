@@ -28,7 +28,10 @@ PYBIND11_MODULE(startouch, m) {
         bool gripper_exist = kwargs.contains("gripper_exist") ? kwargs["gripper_exist"].cast<bool>() : false;
         std::string can_interface = kwargs.contains("can_interface") ? kwargs["can_interface"].cast<std::string>() : "can0";
             bool enable_fd = kwargs.contains("enable_fd") ? kwargs["enable_fd"].cast<bool>() : false;
-            return new ArmController(gripper_exist,can_interface, enable_fd);
+            bool dry_run = kwargs.contains("dry_run") ? kwargs["dry_run"].cast<bool>() : false;
+            return new ArmController(gripper_exist,can_interface, enable_fd,
+                                     startouch::damiao_motor::ControlMode::MIT_MODE,
+                                     dry_run);
         }))
 
         // .def("printConfig", &ArmController::printConfig,"A function which queries the initial params configuration of the arm controller.")
@@ -47,6 +50,44 @@ PYBIND11_MODULE(startouch, m) {
             "If neither is provided, speed_percent=0.1 is used. "
             "Blocks until the motion finishes and returns the planned motion duration in seconds.",
             py::arg("waypoints"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("move_joint_waypoints_with_gripper", &ArmController::move_joint_waypoints_with_gripper,
+            "Move through joint waypoints and synchronize gripper targets to the same "
+            "planned waypoint trajectory. gripper_positions must have one value per waypoint.",
+            py::arg("waypoints"),
+            py::arg("gripper_positions"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("update_joint_waypoint_chunk", &ArmController::update_joint_waypoint_chunk,
+            "Joint waypoint action chunk update. Non-blocking: keeps a short prefix of the active "
+            "waypoint trajectory, appends a freshly planned suffix, and replaces future samples.",
+            py::arg("waypoints"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("switch_delay_sec") = 0.05,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("update_joint_waypoint_chunk_with_gripper", &ArmController::update_joint_waypoint_chunk_with_gripper,
+            "Joint waypoint action chunk update with synchronized gripper targets. Non-blocking; "
+            "gripper_positions must have one value per waypoint.",
+            py::arg("waypoints"),
+            py::arg("gripper_positions"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("switch_delay_sec") = 0.05,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("plan_joint_waypoints_with_gripper", &ArmController::plan_joint_waypoints_with_gripper,
+            "Dry-run plan joint waypoints with synchronized gripper targets without publishing. "
+            "Rows are [t_rel, q1..q6, x, y, z, roll, pitch, yaw, gripper, planning_time_s].",
+            py::arg("q_start"),
+            py::arg("waypoints"),
+            py::arg("gripper_positions"),
             py::arg("time_sec") = 0.0,
             py::arg("speed_percent") = -1.0,
             py::call_guard<py::gil_scoped_release>())
@@ -72,6 +113,22 @@ PYBIND11_MODULE(startouch, m) {
             py::arg("position_tolerance_m") = 0.003,
             py::arg("orientation_tolerance_rad") = 0.05,
             py::call_guard<py::gil_scoped_release>())
+
+        .def("move_p_with_gripper", &ArmController::move_p_with_gripper,
+            "MoveP with synchronized gripper targets. Pose format is "
+            "[x, y, z, roll, pitch, yaw]; gripper_positions must have one value per input pose.",
+            py::arg("poses"),
+            py::arg("gripper_positions"),
+            py::arg("time_sec") = 0.0,
+            py::arg("speed_percent") = -1.0,
+            py::arg("blend_radius_m") = 0.002,
+            py::arg("position_tolerance_m") = 0.003,
+            py::arg("orientation_tolerance_rad") = 0.05,
+            py::call_guard<py::gil_scoped_release>())
+
+        .def("get_last_waypoint_command_samples", &ArmController::get_last_waypoint_command_samples,
+            "Return the last planned waypoint command samples. Rows are "
+            "[t_rel, q1..q6, x, y, z, roll, pitch, yaw, gripper, planning_time_s].")
 
         .def("run_motion_program", &ArmController::run_motion_program,
             "Run a structured motion program. Consecutive MoveJ items are merged "

@@ -28,7 +28,8 @@ class ArmController {
             bool enable_fd = false,
             startouch::damiao_motor::ControlMode motor_control_mode =
                 //startouch::damiao_motor::ControlMode::POS_VEL_MODE
-                startouch::damiao_motor::ControlMode::MIT_MODE
+                startouch::damiao_motor::ControlMode::MIT_MODE,
+            bool dry_run = false
         );
 
         ~ArmController();
@@ -36,6 +37,28 @@ class ArmController {
         void set_joint_raw(const std::vector<double>& q_end,const std::vector<double>& v_end);
         double move_joint_waypoints(
             const std::vector<std::vector<double>>& waypoints,
+            double time_sec = 0.0,
+            double speed_percent = -1.0);
+        double move_joint_waypoints_with_gripper(
+            const std::vector<std::vector<double>>& waypoints,
+            const std::vector<double>& gripper_positions,
+            double time_sec = 0.0,
+            double speed_percent = -1.0);
+        double update_joint_waypoint_chunk(
+            const std::vector<std::vector<double>>& waypoints,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double switch_delay_sec = 0.05);
+        double update_joint_waypoint_chunk_with_gripper(
+            const std::vector<std::vector<double>>& waypoints,
+            const std::vector<double>& gripper_positions,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double switch_delay_sec = 0.05);
+        std::vector<std::vector<double>> plan_joint_waypoints_with_gripper(
+            const std::vector<double>& q_start,
+            const std::vector<std::vector<double>>& waypoints,
+            const std::vector<double>& gripper_positions,
             double time_sec = 0.0,
             double speed_percent = -1.0);
         double move_pose_waypoints(
@@ -58,6 +81,15 @@ class ArmController {
             double blend_radius_m = 0.002,
             double position_tolerance_m = 0.003,
             double orientation_tolerance_rad = 0.05);
+        double move_p_with_gripper(
+            const std::vector<std::vector<double>>& poses,
+            const std::vector<double>& gripper_positions,
+            double time_sec = 0.0,
+            double speed_percent = -1.0,
+            double blend_radius_m = 0.002,
+            double position_tolerance_m = 0.003,
+            double orientation_tolerance_rad = 0.05);
+        std::vector<std::vector<double>> get_last_waypoint_command_samples();
         double run_motion_program(const std::vector<MotionProgramItem>& program);
 
         // void set_joint_raw_ik(const std::vector<double>& q_end,const std::vector<double>& v_end, const std::vector<double>& q_now);

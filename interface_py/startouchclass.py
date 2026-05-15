@@ -213,14 +213,15 @@ class SingleArm:
         num_joints (int): Number of joints in the arm
     """
 
-    def __init__(self,can_interface_ = "can0",gripper =True,enable_fd_ = False):
+    def __init__(self,can_interface_ = "can0",gripper =True,enable_fd_ = False, dry_run: bool = False):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(current_dir)
         permutation_matrix = os.path.join(parent_dir, 'param_csv_gripper', 'permutationMatrix.csv')
         pi_b = os.path.join(parent_dir, 'param_csv_gripper', 'pi_b.csv')
         pi_fr = os.path.join(parent_dir, 'param_csv_gripper', 'pi_fr.csv')
-        self.arm = startouch.ArmController(can_interface = can_interface_,enable_fd = enable_fd_,gripper_exist  =gripper,
-                                           permutation_matrix=permutation_matrix,pi_b =pi_b,pi_fr = pi_fr)
+        self.arm = startouch.ArmController(can_interface=can_interface_, enable_fd=enable_fd_,
+                                           gripper_exist=gripper, dry_run=dry_run,
+                                           permutation_matrix=permutation_matrix, pi_b=pi_b, pi_fr=pi_fr)
 
     @staticmethod
     def _parse_vla_frames(frames) -> Tuple[List[List[float]], List[float]]:
@@ -384,6 +385,99 @@ class SingleArm:
             speed_percent=speed_percent,
         )
 
+    def move_joint_waypoints_with_gripper(
+        self,
+        waypoints: Union[List[List[float]], np.ndarray],
+        gripper_positions: Union[List[float], np.ndarray],
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+    ) -> float:
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
+        joint_points = MotionProgram._as_2d_points(waypoints, 6, "waypoint")
+        gripper_values = np.asarray(gripper_positions, dtype=float).reshape(-1)
+        if len(joint_points) != len(gripper_values):
+            raise ValueError("waypoints and gripper_positions must have the same length")
+        if hasattr(self.arm, "move_joint_waypoints_with_gripper"):
+            return self.arm.move_joint_waypoints_with_gripper(
+                waypoints=joint_points,
+                gripper_positions=np.clip(gripper_values, 0.0, 1.0).tolist(),
+                time_sec=time_sec,
+                speed_percent=speed_percent,
+            )
+        duration = self.set_joint_waypoints(
+            joint_points,
+            time_sec=time_sec if time_sec > 0.0 else None,
+            speed_percent=speed_percent if speed_percent > 0.0 else None,
+        )
+        self.setGripperPosition(float(np.clip(gripper_values[-1], 0.0, 1.0)))
+        return duration
+
+    def update_joint_waypoint_chunk(
+        self,
+        waypoints: Union[List[List[float]], np.ndarray],
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+        switch_delay_sec: float = 0.05,
+    ) -> float:
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
+        if not hasattr(self.arm, "update_joint_waypoint_chunk"):
+            raise RuntimeError("startouch pybind does not provide update_joint_waypoint_chunk")
+        return self.arm.update_joint_waypoint_chunk(
+            waypoints=MotionProgram._as_2d_points(waypoints, 6, "waypoint"),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            switch_delay_sec=float(switch_delay_sec),
+        )
+
+    def update_joint_waypoint_chunk_with_gripper(
+        self,
+        waypoints: Union[List[List[float]], np.ndarray],
+        gripper_positions: Union[List[float], np.ndarray],
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+        switch_delay_sec: float = 0.05,
+    ) -> float:
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
+        joint_points = MotionProgram._as_2d_points(waypoints, 6, "waypoint")
+        gripper_values = np.asarray(gripper_positions, dtype=float).reshape(-1)
+        if len(joint_points) != len(gripper_values):
+            raise ValueError("waypoints and gripper_positions must have the same length")
+        if not hasattr(self.arm, "update_joint_waypoint_chunk_with_gripper"):
+            raise RuntimeError("startouch pybind does not provide update_joint_waypoint_chunk_with_gripper")
+        return self.arm.update_joint_waypoint_chunk_with_gripper(
+            waypoints=joint_points,
+            gripper_positions=np.clip(gripper_values, 0.0, 1.0).tolist(),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+            switch_delay_sec=float(switch_delay_sec),
+        )
+
+    def plan_joint_waypoints_with_gripper(
+        self,
+        q_start: Union[List[float], np.ndarray],
+        waypoints: Union[List[List[float]], np.ndarray],
+        gripper_positions: Union[List[float], np.ndarray],
+        time_sec: Optional[float] = None,
+        speed_percent: Optional[float] = None,
+    ):
+        time_sec, speed_percent = MotionProgram._normalize_time_speed(time_sec, speed_percent)
+        if not hasattr(self.arm, "plan_joint_waypoints_with_gripper"):
+            raise RuntimeError("startouch pybind does not provide plan_joint_waypoints_with_gripper")
+        q_start_arr = np.asarray(q_start, dtype=float).reshape(-1)
+        if len(q_start_arr) != 6:
+            raise ValueError("q_start must have exactly 6 values")
+        joint_points = MotionProgram._as_2d_points(waypoints, 6, "waypoint")
+        gripper_values = np.asarray(gripper_positions, dtype=float).reshape(-1)
+        if len(joint_points) != len(gripper_values):
+            raise ValueError("waypoints and gripper_positions must have the same length")
+        return self.arm.plan_joint_waypoints_with_gripper(
+            q_start=q_start_arr.tolist(),
+            waypoints=joint_points,
+            gripper_positions=np.clip(gripper_values, 0.0, 1.0).tolist(),
+            time_sec=time_sec,
+            speed_percent=speed_percent,
+        )
+
     def move_p(
         self,
         poses: Union[List[List[float]], np.ndarray],
@@ -416,6 +510,17 @@ class SingleArm:
         poses, gripper_positions = self._parse_vla_frames(frames)
         if len(poses) != len(gripper_positions):
             raise ValueError("poses and gripper positions must have the same length")
+        if hasattr(self.arm, "move_p_with_gripper"):
+            return self.arm.move_p_with_gripper(
+                poses=poses,
+                gripper_positions=np.clip(gripper_positions, 0.0, 1.0).tolist(),
+                time_sec=time_sec,
+                speed_percent=speed_percent,
+                blend_radius_m=blend_radius_m,
+                position_tolerance_m=position_tolerance_m,
+                orientation_tolerance_rad=orientation_tolerance_rad,
+            )
+
         stop_event, gripper_thread = self._start_gripper_position_sync(
             gripper_positions,
             duration_sec=float(time_sec) if time_sec > 0.0 else None,
@@ -435,6 +540,11 @@ class SingleArm:
                 gripper_thread.join(timeout=1.0)
         self.setGripperPosition(float(np.clip(gripper_positions[-1], 0.0, 1.0)))
         return duration
+
+    def get_last_waypoint_command_samples(self):
+        if not hasattr(self.arm, "get_last_waypoint_command_samples"):
+            return []
+        return self.arm.get_last_waypoint_command_samples()
 
     def move_l(
         self,
