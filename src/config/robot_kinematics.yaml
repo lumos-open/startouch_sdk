@@ -121,6 +121,13 @@ gripper_watchdog:
   # 夹爪位置误差连续停止时间。默认 500ms；避免夹取物体瞬间误触发。
   position_error_stop_ms: 50000.0
 
+gripper_control:
+  # 夹爪 MIT 位置控制默认 P/D。未显式传 kp/kd 的 open/close/setGripperDistance/with_gripper 轨迹使用这里。
+  # 若接口显式传入 kp/kd，则以传参为准并覆盖本默认值。
+  # 底层有效范围：default_kp [0.1, 20.0]，default_kd [0.1, 1.0]。
+  default_kp: 2.0
+  default_kd: 0.1
+
 self_collision:
   # 是否启用自碰撞保护。默认 true；基于下方手工胶囊做 capsule-capsule 距离检测。
   enabled: false
