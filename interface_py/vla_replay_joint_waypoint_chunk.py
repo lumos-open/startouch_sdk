@@ -33,18 +33,18 @@ TCP_OFFSET_XYZ = [0.0, 0.0, 0.0]
 EXECUTION_MODE = "joint_waypoint_chunk"
 
 # "timesec": use explicit group duration. "speedpercent": use trajectory limits scaled by SPEED_PERCENT.
-TIMING_MODE = "timesec"
+TIMING_MODE = "speedpercent"
 GROUP_SIZE = 30
 GROUP_BY_STEP_IDX_RESET = False
-DEFAULT_GROUP_TIME_SEC = 3.0
+DEFAULT_GROUP_TIME_SEC = 4.0
 GROUP_TIME_SECS = [
-    2.0,
-    10.0,
     3.0,
-    3.0,
+    12.0,
     4.0,
+    4.0,
+    5.0,
 ]
-SPEED_PERCENT = 0.2
+SPEED_PERCENT = 0.15
 SWITCH_AFTER_POINTS_SEQUENCE = [3, 10, 20]
 SWITCH_DELAY_SEC = 0.05
 
