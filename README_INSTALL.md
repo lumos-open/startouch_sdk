@@ -13,6 +13,10 @@ Version note: `2026-05-22`, author `Charlie`.
 
 版本说明：`2026-05-22`，作者 `Charlie`。
 
+Important release behavior changes are recorded in `CHANGELOG.md`.
+
+重要版本行为变化记录在 `CHANGELOG.md`。
+
 After installation, query the version with:
 
 安装后可通过以下方式查询版本：

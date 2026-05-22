@@ -45,6 +45,7 @@ test = [
 
 [project.urls]
 bugs = "https://github.com/lumos-open/startouch_sdk/issues"
+changelog = "https://github.com/lumos-open/startouch_sdk/blob/main/CHANGELOG.md"
 homepage = "https://github.com/lumos-open/startouch_sdk"
 
 [tool.scikit-build]

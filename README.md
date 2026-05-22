@@ -7,8 +7,33 @@ Current SDK version: `0.1.5`.
 
 Version note: `2026-05-22`, author `Charlie`.
 
+## Important Change in 0.1.5
+
+Version `0.1.5` changes IK failure handling for KDL-based pose and waypoint
+motion. Strict IK is still attempted first. If strict IK fails and
+`ik_fallback.enabled` is `true`, the lower layer may retry nearby XYZ targets
+within the configured tolerance, default `5mm`, so singularity-adjacent waypoint
+chunks can continue instead of stopping immediately.
+
+This behavior is configurable in `src/config/robot_kinematics.yaml`:
+
+```yaml
+ik_fallback:
+  enabled: true
+  position_tolerance_m: 0.005
+  max_candidates: 32
+  max_time_ms: 3.0
+```
+
+Set `enabled: false` to restore the previous strict-only behavior. See
+[CHANGELOG.md](CHANGELOG.md), [README_INSTALL.md](README_INSTALL.md), and
+[README_API.md](README_API.md) for details.
+
 ## Documentation
 
+- [Changelog](CHANGELOG.md)
+  - Version-level behavior changes
+  - Breaking or important compatibility notes
 - [Installation and Runtime Guide](README_INSTALL.md)
   - Supported Ubuntu versions
   - System and Python dependencies
@@ -47,4 +72,3 @@ The SDK ships prebuilt `libstartouch.so` variants:
 The build selects the matching library for the local system. When C++ symbols or
 runtime behavior change, all three variants should be rebuilt and verified
 before publishing.
-

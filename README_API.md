@@ -8,6 +8,10 @@ Version note: `2026-05-22`, author `Charlie`.
 
 版本说明：`2026-05-22`，作者 `Charlie`。
 
+Important release behavior changes are recorded in `CHANGELOG.md`.
+
+重要版本行为变化记录在 `CHANGELOG.md`。
+
 You can query it from Python:
 
 可以在 Python 中查询：
