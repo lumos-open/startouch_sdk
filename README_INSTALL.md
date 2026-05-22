@@ -5,13 +5,13 @@ Python extension, and run the verified SDK examples.
 
 本文档说明如何安装 StarTouch/FastTouch SDK、构建 Python 扩展，并运行已验证的 SDK 示例。
 
-Current SDK version: `0.1.3`.
+Current SDK version: `0.1.4`.
 
-Version note: `2026-05-13 20:40`, author `Charlie`.
+Version note: `2026-05-22`, author `Charlie`.
 
-当前 SDK 版本：`0.1.3`。
+当前 SDK 版本：`0.1.4`。
 
-版本说明：`2026-05-13 20:40`，作者 `Charlie`。
+版本说明：`2026-05-22`，作者 `Charlie`。
 
 After installation, query the version with:
 
