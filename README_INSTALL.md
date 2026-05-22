@@ -5,11 +5,11 @@ Python extension, and run the verified SDK examples.
 
 本文档说明如何安装 StarTouch/FastTouch SDK、构建 Python 扩展，并运行已验证的 SDK 示例。
 
-Current SDK version: `0.1.4`.
+Current SDK version: `0.1.5`.
 
 Version note: `2026-05-22`, author `Charlie`.
 
-当前 SDK 版本：`0.1.4`。
+当前 SDK 版本：`0.1.5`。
 
 版本说明：`2026-05-22`，作者 `Charlie`。
 
@@ -406,6 +406,25 @@ interface_py/replay_refresh_config.yaml
 They do not use the legacy `Replay_refresh/config.yaml`.
 
 它们不使用旧的 `Replay_refresh/config.yaml`。
+
+## IK Fallback Configuration
+
+`src/config/robot_kinematics.yaml` includes `ik_fallback`. When enabled, strict
+KDL IK failure can be recovered by a bounded XYZ-only fallback:
+
+```yaml
+ik_fallback:
+  enabled: true
+  position_tolerance_m: 0.005
+  max_candidates: 32
+  max_time_ms: 3.0
+```
+
+Set `enabled: false` to restore the old behavior where strict IK failure returns
+`ok=False` immediately.
+
+`src/config/robot_kinematics.yaml` 中包含 `ik_fallback`。启用后，严格 KDL IK
+失败时会尝试有界 XYZ 容差 fallback。若需要完全恢复旧行为，将 `enabled` 设为 false。
 
 ### IK Residual Too Large
 

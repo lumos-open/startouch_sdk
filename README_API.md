@@ -1,10 +1,10 @@
 # StarTouch Python SDK API
 
-Current SDK version: `0.1.4`.
+Current SDK version: `0.1.5`.
 
 Version note: `2026-05-22`, author `Charlie`.
 
-当前 SDK 版本：`0.1.4`。
+当前 SDK 版本：`0.1.5`。
 
 版本说明：`2026-05-22`，作者 `Charlie`。
 
@@ -641,6 +641,17 @@ q, ok = arm.solve_ik(
 Quaternion format is `[w, x, y, z]`.
 
 四元数格式为 `[w, x, y, z]`。
+
+If strict KDL IK fails and `ik_fallback.enabled` is true in
+`src/config/robot_kinematics.yaml`, the lower layer may try a bounded
+position-only fallback inside `ik_fallback.position_tolerance_m`. Accepted
+fallbacks return `ok=True` and print a warning with the adjusted target and FK
+error. Set `ik_fallback.enabled: false` to restore the old strict-only behavior.
+
+如果严格 KDL IK 失败且 `src/config/robot_kinematics.yaml` 中
+`ik_fallback.enabled` 为 true，底层会在 `ik_fallback.position_tolerance_m`
+范围内尝试仅 XYZ 位置容差 fallback。fallback 成功时返回 `ok=True`，并打印调整后的目标点和
+FK 误差。将 `ik_fallback.enabled` 设为 false 可恢复旧的严格 IK 行为。
 
 ### `get_ee_pose_euler()` / `get_ee_pose_quat()`
 

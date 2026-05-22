@@ -7,7 +7,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "fastouch_sdk"
 # SDK version note: 2026-05-22, author Charlie.
-version = "0.1.4"
+version = "0.1.5"
 description = "Precompiled Fastouch robot SDK"
 readme = "README_INSTALL.md"
 authors = [

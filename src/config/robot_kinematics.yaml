@@ -20,6 +20,16 @@ logging:
   # 是否打印 IK 诊断 Debug。默认 false；打开后当 IK 原始解被 URDF 限位裁剪时，打印 raw/clipped 解和 FK 误差。
   ik_diagnostics: false
 
+ik_fallback:
+  # 严格 KDL IK 失败后是否启用 XYZ 容差 fallback。false 时保持旧逻辑：直接返回 IK 失败。
+  enabled: true
+  # fallback 只允许在原始目标 XYZ 周围该半径内微调；姿态目标不放宽。
+  position_tolerance_m: 0.005
+  # fallback 最多尝试的微调候选点数量，防止奇异点附近长时间卡顿。
+  max_candidates: 32
+  # fallback 最大耗时，单位 ms；超过后快速失败并返回 false。
+  max_time_ms: 3.0
+
 pos_vel_mode:
   max_acc_limits: [28.0, 28.0, 28.0, 22.0, 26.0, 26.0]
   max_dec_limits: [-28.0, -28.0, -28.0, -22.0, -26.0, -26.0]

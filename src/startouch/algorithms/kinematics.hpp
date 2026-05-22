@@ -122,7 +122,8 @@ class RobotKinematics {
         bool solve_ik_kdl(const std::vector<double>& target_pos, 
                     const std::vector<double>& target_euler, 
                     const std::vector<double>& q_curr_vec,
-                    std::vector<double>& q_out);
+                    std::vector<double>& q_out,
+                    bool* used_fallback = nullptr);
         std::vector<double> forwardKinematics_kdl(const std::vector<double>& q_vec);
         std::vector<double> gravity_compensation_kdl(const std::vector<double>& q_vec) const;
         std::vector<double> coriolis_compensation_kdl(const std::vector<double>& q_vec,const std::vector<double>& qd_vec) const;
