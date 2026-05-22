@@ -131,3 +131,20 @@ Assistant:
   - `startouchlib`：KDL 线程安全保护、夹爪默认 P/D 配置化。
   - `startouch_sdk`：安装依赖说明、SDK 运行配置与二进制库同步、VLA chunk 脚本参数和速度报告、双臂 replay 脚本、恢复文档。
 - 运行产物 PNG 不纳入提交，除非用户明确要求。
+
+## 2026-05-22 Ubuntu 20.04 SDK 库符号修复
+
+User:
+
+- 反馈 Ubuntu 20.04 环境导入 SDK 时报错：
+  `undefined symbol: ArmController::get_last_waypoint_command_samples()`。
+- 要求维护 20.04、22.04、24.04 三个系统版本的预编译库，并在 Docker 中测试后推送内网 GitLab。
+
+Assistant:
+
+- 定位原因：SDK 的 CMake 会在 20.04 选择 `src/libstartouch.so.20`，而旧 `.20` 未包含新的 waypoint command sample API 符号。
+- 使用 `startouchlib/scripts/build_sdk_libs.sh` 在 Docker 中重建 Ubuntu 20.04、22.04、24.04 三套 `libstartouch.so`。
+- 本机和容器验证：
+  - `src/libstartouch.so.20`、`.22`、`.24` 均导出 `ArmController::get_last_waypoint_command_samples()`。
+  - Ubuntu 20.04/22.04/24.04 容器中对应库的 `ldd` 依赖均可解析。
+- 本次实际文件变化为 `.20` 和 `.24` 更新；`.22` 与当前主机版本内容一致。
