@@ -112,3 +112,11 @@ Current intended direction:
 - Separate motion core, command runtime, safety manager, fault codes, config schema, diagnostics, and API layer.
 - Preserve old APIs during migration and introduce v2 paths for validation before switching defaults.
 
+## High-Frequency Recovery Files
+
+In addition to this state file:
+
+- `docs/SESSION_LOG.md` records key user questions, conclusions, and work checkpoints between commits.
+- `docs/NEXT_ACTIONS.md` records the current short-term task state.
+
+The assistant should update these files proactively during substantial discussion, before coding, after coding, after tests, and before commits.
