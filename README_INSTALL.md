@@ -46,13 +46,16 @@ Install build tools and C++ dependencies:
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y build-essential cmake libeigen3-dev liborocos-kdl-dev pybind11-dev
+sudo apt-get install -y build-essential cmake pkg-config libeigen3-dev libyaml-cpp-dev liborocos-kdl-dev libtinyxml2-dev pybind11-dev
 ```
 
 Notes:
 
 - `cmake`, `build-essential`, `libeigen3-dev`, and `pybind11-dev` are required
   by the local CMake/pybind11 build.
+- `pkg-config`, `libyaml-cpp-dev`, and `libtinyxml2-dev` are required by the
+  bundled `libstartouch.so` build/runtime dependency chain. `tinyxml2` is used
+  by the C++ kinematics/URDF parser.
 - `liborocos-kdl-dev` is needed by the kinematics headers used in the SDK
   source tree.
 - `Threads` is provided by the system toolchain and is resolved by CMake.
