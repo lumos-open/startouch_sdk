@@ -20,17 +20,22 @@ classifiers = [
 license = {text = "MIT"}
 dependencies = [
   "typer",
-  "numpy",
+  "numpy>=1.26,<2",
   "scipy",
   "PyYAML",
   "python-can>=4.3.1",
   "tqdm",
   "matplotlib",
-  "opencv-python",
+  "opencv-python-headless==4.9.0.80",
   "pillow",
   "h5py",
   "jinja2",
   "typeguard",
+  "websockets",
+  "websocket-client",
+  "json-numpy",
+  "msgpack-numpy",
+  "loguru",
 ]
 requires-python = ">= 3.8"
 

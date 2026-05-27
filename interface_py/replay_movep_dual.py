@@ -27,7 +27,7 @@ MOVE_P_INTERVAL = 1
 MOVE_P_CONTROL_HZ = 400.0
 GRIPPER_SYNC_HZ = 200.0
 ZERO_JOINTS = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-DEFAULT_DUAL_MULTI_SESSION_DIR = Path("/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_20260430")
+DEFAULT_DUAL_MULTI_SESSION_DIR = Path("/home/lumos/fastumi/DATA/multi_session_20260430")
 
 _active_arms = []
 _cleanup_started = threading.Event()

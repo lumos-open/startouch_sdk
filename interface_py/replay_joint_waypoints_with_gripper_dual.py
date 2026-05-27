@@ -13,7 +13,11 @@ from replay_refresh_utils import select_session_subdir, load_trajectory, transfo
 try:
     from startouchclass import SingleArm
 except Exception as e:
-    pass
+    raise RuntimeError(
+        "Failed to import startouchclass.SingleArm. "
+        "Activate the SDK environment first, for example: "
+        "cd /home/lumos && . /home/lumos/startouch_sdk/env.sh"
+    ) from e
 
 CONFIG_PATH = Path(__file__).with_name("replay_refresh_config.yaml")
 
@@ -28,7 +32,7 @@ MOVE_P_CONTROL_HZ = 400.0
 GRIPPER_SYNC_HZ = 200.0
 GRIPPER_MAX_DISTANCE_M = 0.085
 ZERO_JOINTS = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-DEFAULT_DUAL_MULTI_SESSION_DIR = Path("/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_20260430")
+DEFAULT_DUAL_MULTI_SESSION_DIR = Path("/home/lumos/fastumi/DATA/multi_session_20260430")
 
 _active_arms = []
 _cleanup_started = threading.Event()

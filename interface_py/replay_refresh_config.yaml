@@ -1,5 +1,5 @@
-DATA_ROOT: "/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA"
-dual_multi_session_dir: "/home/lumos/code/FastTouchV2/fnl/fnl/fastumi/DATA/multi_session_20260430"
+DATA_ROOT: "/home/lumos/fastumi/DATA"
+dual_multi_session_dir: "/home/lumos/fastumi/DATA/multi_session_20260430"
 speed_rate: 1
 pose_topic: "/vive/LHR_FBDADDB4/pose"
 clamp_topic: "/xv_sdk/250801DR48FP25002352/clamp/Data"
