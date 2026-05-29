@@ -3,9 +3,18 @@
 StarTouch SDK provides the Python interface and prebuilt C++ runtime libraries
 for controlling StarTouch/FastTouch robotic arms.
 
-Current SDK version: `0.1.5`.
+Current SDK version: `0.1.6`.
 
-Version note: `2026-05-22`, author `Charlie`.
+Version note: `2026-05-29`, author `Charlie`.
+
+## Important Change in 0.1.6
+
+Version `0.1.6` changes the default IK strategy to
+`kdl_with_approx_fallback`: strict KDL and the existing nearby-XYZ fallback run
+first, and the approximate residual IK path is used only after those fail. The
+approximate fallback is accepted only when FK residuals are inside configured
+tolerances and the joint delta is within the limit derived from
+`joint_trajectory.max_vel_limits * ik_solver.max_joint_delta_time_sec`.
 
 ## Important Change in 0.1.5
 

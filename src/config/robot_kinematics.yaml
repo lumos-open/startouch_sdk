@@ -30,6 +30,21 @@ ik_fallback:
   # fallback 最大耗时，单位 ms；超过后快速失败并返回 false。
   max_time_ms: 3.0
 
+ik_solver:
+  # 默认 kdl_with_approx_fallback：KDL exact/位置扰动优先，全部失败后再用近似 IK 兜底。
+  # fast 仅用于对比/调试；kdl 可恢复纯 KDL 主路径。
+  mode: kdl_with_approx_fallback
+  position_tolerance_m: 0.003
+  orientation_tolerance_rad: 0.05
+  max_fast_iterations: 5
+  max_residual_search_iterations: 60
+  damping: 0.02
+  max_joint_step_rad: 0.25
+  # approximate fallback 的单步关节验收阈值按 joint_trajectory.max_vel_limits * 该点间隔计算。
+  # 当前 VLA/chunk 点间隔按 20ms 验收；实际 chunk horizon 变化时只改该时间，不直接拍关节阈值。
+  max_joint_delta_time_sec: 0.02
+  allow_kdl_fallback: true
+
 pos_vel_mode:
   max_acc_limits: [28.0, 28.0, 28.0, 22.0, 26.0, 26.0]
   max_dec_limits: [-28.0, -28.0, -28.0, -22.0, -26.0, -26.0]
