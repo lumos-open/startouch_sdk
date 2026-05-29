@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.6 - 2026-05-29
+
+### IK Fallback Strategy
+
+- Added `kdl_with_approx_fallback` as the default IK mode.
+- Kept strict KDL and the existing nearby-XYZ fallback as the primary path.
+- Runs approximate residual IK only after the KDL paths fail.
+- Validates approximate fallback with FK residual tolerances and a
+  velocity-derived joint delta limit:
+  `joint_trajectory.max_vel_limits * ik_solver.max_joint_delta_time_sec`.
+- Fixed FK quaternion residual handling for IK validation.
+
 ## 0.1.5 - 2026-05-22
 
 ### Important IK Behavior Change
@@ -41,4 +53,3 @@ ik_fallback:
 - Rebuilt Ubuntu 20.04, 22.04, and 24.04 runtime libraries.
 - Added the public `README.md` entry point.
 - Removed internal recovery docs from the public SDK package.
-

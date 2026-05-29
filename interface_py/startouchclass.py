@@ -6,8 +6,8 @@ import threading
 import time
 import startouch
 
-# SDK version note: 2026-05-22, author Charlie.
-SDK_VERSION = "0.1.5"
+# SDK version note: 2026-05-29, author Charlie.
+SDK_VERSION = "0.1.6"
 __version__ = SDK_VERSION
 DEFAULT_MOTION_SPEED_PERCENT = 0.1
 _GRIPPER_COMMAND_PERIOD_SEC = 0.005
