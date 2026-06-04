@@ -3,9 +3,15 @@
 StarTouch SDK provides the Python interface and prebuilt C++ runtime libraries
 for controlling StarTouch/FastTouch robotic arms.
 
-Current SDK version: `0.1.6`.
+Current SDK version: `0.1.7`.
 
-Version note: `2026-05-29`, author `Charlie`.
+Version note: `2026-06-04`, author `Charlie`.
+
+## Important Change in 0.1.7
+
+Version `0.1.7` adds the `gripper_control.type` configuration option. Select
+`TypeFZ` for the existing gripper mechanism or `TypeLJ` for the new mechanism
+with its adjusted motor-angle offset and maximum opening distance.
 
 ## Important Change in 0.1.6
 

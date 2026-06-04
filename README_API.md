@@ -1,12 +1,12 @@
 # StarTouch Python SDK API
 
-Current SDK version: `0.1.6`.
+Current SDK version: `0.1.7`.
 
-Version note: `2026-05-29`, author `Charlie`.
+Version note: `2026-06-04`, author `Charlie`.
 
-当前 SDK 版本：`0.1.6`。
+当前 SDK 版本：`0.1.7`。
 
-版本说明：`2026-05-29`，作者 `Charlie`。
+版本说明：`2026-06-04`，作者 `Charlie`。
 
 Important release behavior changes are recorded in `CHANGELOG.md`.
 

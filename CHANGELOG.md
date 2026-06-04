@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.7 - 2026-06-04
+
+### Gripper Type Configuration
+
+- Added the `gripper_control.type` configuration option.
+- Added `TypeFZ` for the existing gripper mechanism with a `1.056071rad`
+  motor-angle offset and `0.085m` maximum opening distance.
+- Added `TypeLJ` for the new gripper mechanism with a `1.210426rad`
+  motor-angle offset and `0.08m` maximum opening distance.
+- Rebuilt the bundled runtime libraries for supported x86 Ubuntu systems and
+  ARM64.
+
 ## 0.1.6 - 2026-05-29
 
 ### IK Fallback Strategy
