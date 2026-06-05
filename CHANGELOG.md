@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.7 - 2026-06-04
+## 0.1.7 - 2026-06-05
 
 ### Gripper Type Configuration
 

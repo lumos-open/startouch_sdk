@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 PYBIND11_MODULE(startouch, m) {
-    // SDK version note: 2026-06-04, author Charlie.
+    // SDK version note: 2026-06-05, author Charlie.
     m.attr("__version__") = "0.1.7";
 
     py::class_<ArmController::MotionProgramItem>(m, "MotionProgramItem")

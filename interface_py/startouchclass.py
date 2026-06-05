@@ -6,7 +6,7 @@ import threading
 import time
 import startouch
 
-# SDK version note: 2026-06-04, author Charlie.
+# SDK version note: 2026-06-05, author Charlie.
 SDK_VERSION = "0.1.7"
 __version__ = SDK_VERSION
 DEFAULT_MOTION_SPEED_PERCENT = 0.1
