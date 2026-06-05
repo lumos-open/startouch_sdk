@@ -2,11 +2,11 @@
 
 Current SDK version: `0.1.7`.
 
-Version note: `2026-06-04`, author `Charlie`.
+Version note: `2026-06-05`, author `Charlie`.
 
 当前 SDK 版本：`0.1.7`。
 
-版本说明：`2026-06-04`，作者 `Charlie`。
+版本说明：`2026-06-05`，作者 `Charlie`。
 
 Important release behavior changes are recorded in `CHANGELOG.md`.
 

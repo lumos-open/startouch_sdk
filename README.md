@@ -5,7 +5,7 @@ for controlling StarTouch/FastTouch robotic arms.
 
 Current SDK version: `0.1.7`.
 
-Version note: `2026-06-04`, author `Charlie`.
+Version note: `2026-06-05`, author `Charlie`.
 
 ## Important Change in 0.1.7
 
