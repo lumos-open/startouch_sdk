@@ -129,7 +129,7 @@ target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
 target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Eigen3::Eigen Threads::Threads)
 set_target_properties(startouch PROPERTIES
     BUILD_RPATH "$ORIGIN;$ORIGIN/../src"
-    INSTALL_RPATH "$ORIGIN;$ORIGIN/../src"
+    INSTALL_RPATH "$ORIGIN"
 )
 
 install(TARGETS startouch LIBRARY DESTINATION .)
