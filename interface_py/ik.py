@@ -11,7 +11,7 @@ from startouchclass import SingleArm
 
 # ================== 初始化机械臂 ==================
 arm_controllers = [
-    SingleArm(can_interface_="can0", enable_fd_=False),
+    SingleArm(can_interface_="can2", enable_fd_=False),
     # SingleArm(can_interface_="can1", enable_fd_=False),
 ]
 time.sleep(3)
