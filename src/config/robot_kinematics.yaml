@@ -1,6 +1,7 @@
 kinematics:
   tool:
-    xyz: [0.15584, 0.0, 0.0]
+          #xyz: [0.15584, 0.0, 0.0]
+    xyz: [0.0, 0.0, 0.0]
     rpy: [0.0, 0.0, 0.0]
   payload:
     mass: 0 #0.126
@@ -151,7 +152,7 @@ gripper_control:
   # TypeFZ：起始角偏置 1.056071rad，最大打开距离 0.085m。
   # TypeLJ：起始角偏置 1.210426rad，最大打开距离 0.08m。
   # 更换夹爪后只需精确修改这一项，默认使用 TypeFZ。
-  type: TypeFZ
+  type: TypeLJ
   # 夹爪 MIT 位置控制默认 P/D。未显式传 kp/kd 的 open/close/setGripperDistance/with_gripper 轨迹使用这里。
   # 若接口显式传入 kp/kd，则以传参为准并覆盖本默认值。
   # 底层有效范围：default_kp [0.1, 20.0]，default_kd [0.1, 1.0]。
