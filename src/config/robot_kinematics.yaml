@@ -137,7 +137,7 @@ gripper_watchdog:
   # 是否启用夹爪 watchdog。默认 true；夹爪命令/状态当前按 200Hz，即 5ms 周期处理。
   enabled: false
   # 夹爪命令发送周期。默认 5ms=200Hz；不要套用 6轴 400Hz 周期。
-  command_period_ms: 7.142857142857143
+  command_period_ms: 5.0
   # 夹爪状态反馈超时。默认 100ms；超过后报警。
   state_timeout_ms: 100.0
   # 夹爪位置误差报警阈值。默认 0.015m；夹物体时可能长期存在误差，因此先报警。
