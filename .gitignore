@@ -1,5 +1,6 @@
 bin/
 build/
+build_*/
 *.log
 __pycache__
 # --- 编译产物 ---
@@ -28,3 +29,4 @@ logs/
 !.env.example
 
 *-gnu.so
+*.bak_*

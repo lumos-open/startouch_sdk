@@ -40,13 +40,21 @@ find_package(Threads REQUIRED)
 #         ARCHIVE DESTINATION ./${PROJECT_NAME}/)
 
 
-# Select the bundled runtime library. ARM boards use a dedicated aarch64 build;
-# x86 Linux keeps the existing Ubuntu-version selection.
+# Select the bundled startouch library. ARM boards use a dedicated aarch64
+# build; x86 Linux keeps the existing Ubuntu-version selection.
+option(
+    STARTOUCH_BUNDLE_RUNTIME_DEPS
+    "Install deps/linux-aarch64 into the wheel (requires matching target glibc)"
+    OFF
+)
 set(EXTRA_RUNTIME_DEPS "")
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
     set(DEPEND_LIB_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/libstartouch.so.arm64")
     set(ARM_RUNTIME_DEPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps/linux-aarch64")
-    if(EXISTS "${ARM_RUNTIME_DEPS_DIR}")
+    if(STARTOUCH_BUNDLE_RUNTIME_DEPS)
+        if(NOT EXISTS "${ARM_RUNTIME_DEPS_DIR}")
+            message(FATAL_ERROR "Bundled runtime dependency directory is missing: ${ARM_RUNTIME_DEPS_DIR}")
+        endif()
         file(GLOB EXTRA_RUNTIME_DEPS "${ARM_RUNTIME_DEPS_DIR}/*.so*")
     endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")

@@ -1,4 +1,7 @@
 export STARTOUCH_SDK="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export STARTOUCH_SDK_ROOT="$STARTOUCH_SDK"
+export STARTOUCH_CONFIG_DIR="$STARTOUCH_SDK/src/config"
+export STARTOUCH_PARAM_DIR="$STARTOUCH_SDK/src/param_csv_gripper"
 export PATH="/home/lumos/bin:$PATH"
 
 if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
@@ -15,7 +18,7 @@ else
     return 1 2>/dev/null || exit 1
 fi
 
-conda activate LumosTouch
+conda activate "${STARTOUCH_CONDA_ENV:-lumostouch}"
 
 # libstartouch.so lives under src/. Bundled deps/ may target newer glibc (e.g. 2.35)
 # and break Ubuntu 20.04 / glibc 2.31 boards; opt in explicitly when needed.

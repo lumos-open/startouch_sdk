@@ -5,6 +5,12 @@ for controlling StarTouch/FastTouch robotic arms.
 
 Current SDK version: `0.1.7`.
 
+The RK3568 onboard-CAN runtime validated on `10.0.0.117` is maintained on
+branch `charlie3568cpucan`. It uses the `lumostouch` Python 3.10 environment,
+left arm on `can0`, right arm on `can1`, joint control at 400 Hz, and gripper
+control at 200 Hz. Follow [README_INSTALL.md](README_INSTALL.md) instead of
+reusing paths from older deployments.
+
 Version note: `2026-06-05`, author `Charlie`.
 
 ## Important Change in 0.1.7
@@ -73,7 +79,7 @@ python -c "import startouch; from startouchclass import __version__; print(start
 Expected output for this release:
 
 ```text
-0.1.5 0.1.5
+0.1.7 0.1.7
 ```
 
 ## Supported Ubuntu Runtime Libraries
