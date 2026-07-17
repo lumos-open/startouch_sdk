@@ -177,7 +177,8 @@ PYBIND11_MODULE(startouch, m) {
             "  tuple[list[float], bool]: (q_sol, success)\n",
             py::arg("target_pos"),
             py::arg("target_euler"),
-            py::arg("q_seed") = std::vector<double>{})
+            py::arg("q_seed") = std::vector<double>{},
+            py::call_guard<py::gil_scoped_release>())
             
             
 
