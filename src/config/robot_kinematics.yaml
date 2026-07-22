@@ -1,7 +1,7 @@
 kinematics:
   tool:
           #xyz: [0.15584, 0.0, 0.0]
-    xyz: [0.0, 0.0, 0.0]
+    xyz: [0.17334, 0.0, 0.0] # TypeFZ 夹爪取 0.15584，TypeLJ 夹爪取 0.17334
     rpy: [0.0, 0.0, 0.0]
   payload:
     mass: 0 #0.126
