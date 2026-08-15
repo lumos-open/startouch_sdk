@@ -148,11 +148,13 @@ gripper_watchdog:
   position_error_stop_ms: 50000.0
 
 gripper_control:
-  # 夹爪型号选择，只允许 TypeFZ 或 TypeLJ。
+  # 夹爪型号选择，只允许 TypeFZ、TypeLJ 或 TypeNex。
   # TypeFZ：起始角偏置 1.056071rad，最大打开距离 0.085m。
   # TypeLJ：起始角偏置 1.210426rad，最大打开距离 0.08m。
-  # 更换夹爪后只需精确修改这一项，默认使用 TypeFZ。
-  type: TypeLJ
+  # TypeNex：电机 0rad 对应两指夹角 -25.44°/间距 0m；-1.22173rad 对应 92.91°/间距 0.24073m。
+  # TypeNex：position 接口仍为 0~1，distance 接口单位仍为 m，越界值会截断到有效范围。
+  # 更换夹爪后只需精确修改这一项；当前选择 TypeNex。
+  type: TypeNex
   # 夹爪 MIT 位置控制默认 P/D。未显式传 kp/kd 的 open/close/setGripperDistance/with_gripper 轨迹使用这里。
   # 若接口显式传入 kp/kd，则以传参为准并覆盖本默认值。
   # 底层有效范围：default_kp [0.1, 20.0]，default_kd [0.1, 1.0]。

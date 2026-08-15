@@ -99,11 +99,11 @@ arm.setGripperDistance(0.085)
 arm.setGripperDistance(0.0, 10, 0.5)
 ```
 
-- `distance`: gripper opening distance in meters, normally `0.0 ~ 0.085`.
+- `distance`: gripper opening distance in meters. TypeNex uses `0.0 ~ 0.24073`; other types use their configured range.
 - `kp`: optional gripper control stiffness.
 - `kd`: optional gripper control damping.
 
-- `distance`：夹爪开合距离，单位米，通常为 `0.0 ~ 0.085`。
+- `distance`：夹爪开合距离，单位米；TypeNex 为 `0.0 ~ 0.24073`，其他类型使用其配置范围。
 - `kp`：可选夹爪控制刚度。
 - `kd`：可选夹爪控制阻尼。
 
@@ -687,7 +687,7 @@ for replay and deployment use `move_p()`, `move_l()`, or
 | VLA Cartesian frame | `[x, y, z, roll, pitch, yaw, gripper]` | m, rad, ratio |
 | Quaternion | `[w, x, y, z]` | unit quaternion |
 | Gripper position | `0.0 ~ 1.0` | ratio |
-| Gripper distance | `0.0 ~ 0.085` | m |
+| Gripper distance | configured; TypeNex: `0.0 ~ 0.24073` | m |
 | `time_sec` / `tf` | scalar | s |
 
 | 数据 | 格式 | 单位 |
@@ -698,7 +698,7 @@ for replay and deployment use `move_p()`, `move_l()`, or
 | VLA 笛卡尔整帧 | `[x, y, z, roll, pitch, yaw, gripper]` | m, rad, 比例 |
 | 四元数 | `[w, x, y, z]` | 单位四元数 |
 | 夹爪开度 | `0.0 ~ 1.0` | 比例 |
-| 夹爪距离 | `0.0 ~ 0.085` | m |
+| 夹爪距离 | 按类型配置；TypeNex：`0.0 ~ 0.24073` | m |
 | `time_sec` / `tf` | 标量 | s |
 
 ## Safety Notes
