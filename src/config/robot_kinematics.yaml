@@ -1,7 +1,7 @@
 kinematics:
   tool:
           #xyz: [0.15584, 0.0, 0.0]
-    xyz: [0.17334, 0.0, 0.0] # TypeFZ 夹爪取 0.15584，TypeLJ 夹爪取 0.17334
+    xyz: [0.0, 0.0, 0.0] # TypeFZ 夹爪取 0.15584，TypeLJ 夹爪取 0.17334
     rpy: [0.0, 0.0, 0.0]
   payload:
     mass: 0 #0.126
@@ -34,7 +34,7 @@ ik_fallback:
 ik_solver:
   # 默认 kdl_with_approx_fallback：KDL exact/位置扰动优先，全部失败后再用近似 IK 兜底。
   # fast 仅用于对比/调试；kdl 可恢复纯 KDL 主路径。
-  mode: kdl_with_approx_fallback
+  mode: analytic
   position_tolerance_m: 0.003
   orientation_tolerance_rad: 0.05
   max_fast_iterations: 5
