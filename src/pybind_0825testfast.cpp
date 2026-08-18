@@ -191,8 +191,16 @@ PYBIND11_MODULE(startouch, m) {
         .def("setGripperDistance",
              py::overload_cast<double, double, double>(&ArmController::setGripperDistance),
              py::arg("distance"), py::arg("kp") = 8.0, py::arg("kd") = 0.1)
+        .def("setGripperAngle", &ArmController::setGripperAngle,
+             "Set the TypeNex total included angle between both fingers in radians. "
+             "The value is clamped to [-0.444011761707, 1.621585408028]. "
+             "Other gripper types raise RuntimeError.",
+             py::arg("angle"))
         .def("get_gripper_position", &ArmController::get_gripper_position)
         .def("get_gripper_distance", &ArmController::get_gripper_distance)
+        .def("get_gripper_angle", &ArmController::get_gripper_angle,
+             "Return the TypeNex total included angle between both fingers in radians. "
+             "Other gripper types raise RuntimeError.")
         .def("cleanup", &ArmController::cleanup,py::call_guard<py::gil_scoped_release>())
         ;
 }

@@ -737,6 +737,11 @@ class SingleArm:
         self.setGripperDistance(distance, kp, kd)
         return True
 
+    def setGripperAngle(self, angle:float) -> bool:
+        """Set the TypeNex total included angle between both fingers, in radians."""
+        self.arm.setGripperAngle(angle)
+        return True
+
     def get_gripper_position(self) -> float:
         #设置夹爪开合程度  0是闭合 1是开合
         return self.arm.get_gripper_position()
@@ -744,6 +749,10 @@ class SingleArm:
     def get_gripper_distance(self) -> float:
         #设置夹爪开合程度  0是闭合 1是开合
         return self.arm.get_gripper_distance()
+
+    def get_gripper_angle(self) -> float:
+        """Return the TypeNex total included angle between both fingers, in radians."""
+        return self.arm.get_gripper_angle()
 
     def cleanup(self):
         # 或者可以直接在析构函数中释放资源

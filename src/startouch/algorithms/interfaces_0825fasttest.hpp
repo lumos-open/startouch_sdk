@@ -116,8 +116,12 @@ class ArmController {
         void setGripperPosition(double position);
         void setGripperDistance(double distance);
         void setGripperDistance(double distance, double kp, double kd = 0.1);
+        // TypeNex only: total included angle between both fingers, in radians.
+        void setGripperAngle(double angle);
         double get_gripper_position();
         double get_gripper_distance();
+        // TypeNex only: total included angle between both fingers, in radians.
+        double get_gripper_angle();
         void cleanup();
     private:
         // 线程对象
