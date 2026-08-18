@@ -150,11 +150,20 @@ gripper_control:
   # 夹爪型号选择，只允许 TypeFZ、TypeLJ 或 TypeNex。
   # TypeFZ：起始角偏置 1.056071rad，最大打开距离 0.085m。
   # TypeLJ：起始角偏置 1.210426rad，最大打开距离 0.08m。
-  # TypeNex：电机 0rad 对应两指夹角 -25.44°/间距 0m；-1.22173rad 对应 92.91°/间距 0.24073m。
-  # TypeNex：position 接口仍为 0~1，distance 接口单位仍为 m，越界值会截断到有效范围。
+  # TypeNex 是双指对称摆动式夹爪。distance 表示两指尖间距，范围 [0, 0.24073]m。
+  # 因手指采用摆动形式，distance 与两指总夹角是基准角补偿后的半角正弦关系，并非线性关系。
+  # TypeNex 专用 angle 接口表示两指之间的总夹角（不是单指摆角或电机角），单位 rad。
+  # angle 范围 [-0.444011761707, 1.621585408028]rad，即 [-25.44°, 92.91°]；
+  # 最大总摆幅为 2.065597169735rad（118.35°），越界值会截断。
+  # 电机范围 [-1.22173, 0]rad，电机角与 angle 线性等比：
+  #   电机 0rad        <-> angle -0.444011761707rad <-> distance 0m
+  #   电机 -1.22173rad <-> angle  1.621585408028rad <-> distance 0.24073m
+  # position 仍是 distance 的 0~1 归一化比例，不是 angle 的线性比例。
+  # setGripperAngle/get_gripper_angle 仅支持 TypeNex；TypeFZ/TypeLJ 调用会报不支持。
   # 更换夹爪后只需精确修改这一项；当前选择 TypeNex。
   type: TypeNex
-  # 夹爪 MIT 位置控制默认 P/D。未显式传 kp/kd 的 open/close/setGripperDistance/with_gripper 轨迹使用这里。
+  # 夹爪 MIT 位置控制默认 P/D。open/close/setGripperPosition/setGripperAngle 和
+  # with_gripper 轨迹使用这里；setGripperDistance 使用其接口传入的 P/D。
   # 若接口显式传入 kp/kd，则以传参为准并覆盖本默认值。
   # 底层有效范围：default_kp [0.1, 20.0]，default_kd [0.1, 1.0]。
   default_kp: 2.0
