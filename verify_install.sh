@@ -3,8 +3,6 @@ set -euo pipefail
 
 SDK_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-/home/lumos/miniforge3/envs/lumostouch/bin/python}"
-EXPECTED_LIB_SHA256="0e3481a289aacd7e363996fad22313751bfe723eab79d63420ed9b61972b9f62"
-
 fail() {
     echo "verify_install: FAIL: $*" >&2
     exit 1
@@ -16,11 +14,29 @@ for file in permutationMatrix.csv pi_b.csv pi_fr.csv; do
     [[ -f "$SDK_ROOT/src/param_csv_gripper/$file" ]] || fail "gripper parameter missing: $file"
 done
 
-for library in "$SDK_ROOT/src/libstartouch.so" "$SDK_ROOT/src/libstartouch.so.arm64"; do
+library_hashes=()
+case "$(uname -m)" in
+    aarch64|arm64)
+        runtime_libraries=(
+            "$SDK_ROOT/src/libstartouch.so"
+            "$SDK_ROOT/src/libstartouch.so.arm64"
+        )
+        ;;
+    *)
+        runtime_libraries=(
+            "$SDK_ROOT/src/libstartouch.so"
+            "$SDK_ROOT/src/libstartouch.so.20"
+            "$SDK_ROOT/src/libstartouch.so.22"
+            "$SDK_ROOT/src/libstartouch.so.24"
+        )
+        ;;
+esac
+for library in "${runtime_libraries[@]}"; do
     [[ -f "$library" ]] || fail "library missing: $library"
     actual_sha="$(sha256sum "$library" | awk '{print $1}')"
-    [[ "$actual_sha" == "$EXPECTED_LIB_SHA256" ]] || \
-        fail "$library SHA256 $actual_sha, expected $EXPECTED_LIB_SHA256"
+    library_hashes+=("$library=$actual_sha")
+    nm -D -C "$library" | grep 'ArmController::setGripperDistanceEffort' >/dev/null || \
+        fail "$library does not contain the 0.1.8 gripper force-control symbols"
 done
 
 module_path="$(
@@ -31,8 +47,11 @@ module_path="$(
 import startouch
 import startouchclass
 
-assert startouch.__version__ == "0.1.7", startouch.__version__
-assert startouchclass.__version__ == "0.1.7", startouchclass.__version__
+assert startouch.__version__ == "0.1.8", startouch.__version__
+assert startouchclass.__version__ == "0.1.8", startouchclass.__version__
+assert hasattr(startouch.ArmController, "setGripperDistanceEffort")
+assert hasattr(startouch.ArmController, "setGripperPositionEffort")
+assert hasattr(startouch.ArmController, "get_gripper_state")
 print(startouch.__file__)
 PY
 )"
@@ -53,4 +72,4 @@ grep -q 'libstartouch.so' <<<"$ldd_output" || fail "extension does not link libs
 echo "verify_install: PASS"
 echo "  Python: $PYTHON_BIN"
 echo "  extension: $module_path"
-echo "  libstartouch SHA256: $EXPECTED_LIB_SHA256"
+printf '  library: %s\n' "${library_hashes[@]}"

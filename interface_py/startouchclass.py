@@ -6,8 +6,8 @@ import threading
 import time
 import startouch
 
-# SDK version note: 2026-06-05, author Charlie.
-SDK_VERSION = "0.1.7"
+# SDK version note: 2026-08-20, TypeNex force-position support.
+SDK_VERSION = "0.1.8"
 __version__ = SDK_VERSION
 DEFAULT_MOTION_SPEED_PERCENT = 0.1
 _GRIPPER_COMMAND_PERIOD_SEC = 0.005
@@ -737,6 +737,16 @@ class SingleArm:
         self.setGripperDistance(distance, kp, kd)
         return True
 
+    def setGripperDistanceEffort(self, distance:float, effort_nm:float) -> bool:
+        """Set opening distance (m) with a motor torque target/limit (Nm)."""
+        self.arm.setGripperDistanceEffort(distance, effort_nm)
+        return True
+
+    def setGripperPositionEffort(self, position:float, effort_nm:float) -> bool:
+        """Set normalized opening with a motor torque target/limit (Nm)."""
+        self.arm.setGripperPositionEffort(position, effort_nm)
+        return True
+
     def setGripperAngle(self, angle:float) -> bool:
         """Set the TypeNex total included angle between both fingers, in radians."""
         self.arm.setGripperAngle(angle)
@@ -753,6 +763,14 @@ class SingleArm:
     def get_gripper_angle(self) -> float:
         """Return the TypeNex total included angle between both fingers, in radians."""
         return self.arm.get_gripper_angle()
+
+    def get_gripper_effort(self) -> float:
+        """Return measured gripper motor output-shaft torque in Nm."""
+        return self.arm.get_gripper_effort()
+
+    def get_gripper_state(self):
+        """Return the native GripperState feedback object."""
+        return self.arm.get_gripper_state()
 
     def cleanup(self):
         # 或者可以直接在析构函数中释放资源

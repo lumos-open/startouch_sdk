@@ -1,10 +1,10 @@
 # StarTouch Python SDK API
 
-Current SDK version: `0.1.7`.
+Current SDK version: `0.1.8`.
 
 Version note: `2026-06-05`, author `Charlie`.
 
-当前 SDK 版本：`0.1.7`。
+当前 SDK 版本：`0.1.8`。
 
 版本说明：`2026-06-05`，作者 `Charlie`。
 
@@ -157,6 +157,53 @@ angle = arm.get_gripper_angle()
 Currently this Python wrapper calls `setGripperDistance(distance, kp, kd)`.
 
 当前 Python 包装层会调用 `setGripperDistance(distance, kp, kd)`。
+
+### `setGripperDistanceEffort(distance, effort_nm)` / `setGripperPositionEffort(position, effort_nm)`
+
+Control TypeNex through the DM4310 native force-position mode. `distance` is in
+metres, `position` is the normalized opening ratio, and `effort_nm` is the
+non-negative motor output-shaft torque target/limit in Nm.
+
+通过 DM4310 原生力位混控模式控制 TypeNex。`distance` 单位为米，`position`
+为归一化开度，`effort_nm` 为非负的电机输出轴目标/限制力矩，单位 Nm。
+
+```python
+arm.setGripperDistanceEffort(0.02, 1.5)
+# or
+arm.setGripperPositionEffort(0.1, 1.5)
+```
+
+The driver implements force-position control as position/velocity control with
+a phase-current saturation. The runtime reads the motor's `TMAX` register and
+sends `i_des = effort_nm / TMAX`; the same queried `TMAX` is used to decode the
+12-bit torque feedback. A positive `KT_Value * Imax`, then YAML defaults, is used
+only when `TMAX` is unavailable. Actual torque may be below the requested limit
+before contact. No tactile sensor is involved. Calling any existing position-only
+gripper API switches the motor back to MIT position mode. This release does not
+add an application-specific safe torque range; it only rejects negative/non-finite
+values and clamps to the DM4310 protocol's physical normalized-current range
+`[0, 1]`.
+
+驱动器的力位混控本质是位置/速度控制外加相电流饱和。运行时读取电机
+`KT_Value`（Nm/A）和 `Imax`（A），按
+`i_des = effort_nm / (KT_Value * Imax)` 下发。接触前实际力矩可能低于目标限制；
+方案不使用触觉传感器。再次调用原有纯位置接口时会自动切回 MIT 位置模式。
+本版本暂不增加业务层安全力矩范围，只拒绝负数/非有限值，并按 DM4310 协议物理范围
+将电流标幺值限制到 `[0, 1]`。
+
+### `get_gripper_effort()` / `get_gripper_state()`
+
+`get_gripper_effort()` returns measured motor output-shaft torque in Nm.
+`get_gripper_state()` returns a `GripperState` object with:
+
+- `position`, `distance_m`
+- `motor_position_rad`, `motor_velocity_rad_s`
+- `effort_nm`, `commanded_effort_nm`
+- `mos_temperature_c`, `rotor_temperature_c`, `error_code`, `enabled`
+- `feedback_age_ms`, `feedback_valid`, `force_control_active`
+
+`get_gripper_effort()` 返回实测电机输出轴力矩（Nm）；`get_gripper_state()`
+同时返回开度、距离、电机位置/速度、目标与实测力矩、温度、错误码和反馈新鲜度。
 
 ### `get_gripper_position()` / `get_gripper_distance()`
 

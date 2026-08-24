@@ -80,6 +80,7 @@ enum class RID : uint8_t {
     k2 = 53,
     m_off = 54,
     dir = 55,
+    Imax = 59,
     p_m = 80,
     xout = 81,
     COUNT = 82

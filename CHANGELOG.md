@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.8 - 2026-08-20
+
+### TypeNex gripper motor-torque control
+
+- Added DM4310 native force-position CAN frames (`0x300 + motor ID`).
+- Added `setGripperDistanceEffort(distance, effort_nm)` and
+  `setGripperPositionEffort(position, effort_nm)`. `effort_nm` is motor
+  output-shaft torque in Nm; it is converted to the protocol's normalized
+  phase-current limit using the queried motor `TMAX`. The runtime falls back
+  to `KT_Value * Imax`, then YAML defaults, when a positive `TMAX` is unavailable.
+- Fixed DM parameter reads to use the protocol-required four-byte query frame,
+  and use the queried `TMAX` for torque-feedback decoding.
+- Added measured torque and full gripper status feedback, including motor
+  velocity, temperatures, error code, enabled state, and feedback freshness.
+- Force-position commands stop and return the gripper to zero-torque MIT mode
+  if state feedback becomes stale or the motor reports a fault.
+- Existing position-only gripper APIs remain MIT position control and
+  automatically switch back from force-position mode.
+
 ## 0.1.7 - 2026-06-05
 
 ### Gripper Type Configuration

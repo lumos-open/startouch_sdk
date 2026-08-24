@@ -81,8 +81,8 @@ python -m pip check
 预期版本：
 
 ```text
-startouch 0.1.7
-startouchclass 0.1.7
+startouch 0.1.8
+startouchclass 0.1.8
 ```
 
 查看实际加载来源：
@@ -185,4 +185,7 @@ src/libstartouch.so.arm64
 ```
 
 发布时应同时更新 `src/libstartouch.so` 和 `src/libstartouch.so.arm64`，并确保二者 SHA
-一致。
+一致。若修改了 `startouchlib` 的 C++ 接口（例如 0.1.8 的夹爪力控接口），必须先在
+目标 aarch64 Ubuntu 20.04 环境重新编译 `libstartouch.so`，再将同一产物更新到上述
+两个文件。`verify_install.sh` 会检查每个发布库是否导出了新接口符号；不同 Ubuntu/
+架构产物之间不要求 SHA 相同。

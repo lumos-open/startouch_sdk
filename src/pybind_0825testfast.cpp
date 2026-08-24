@@ -7,8 +7,24 @@
 
 namespace py = pybind11;
 PYBIND11_MODULE(startouch, m) {
-    // SDK version note: 2026-06-05, author Charlie.
-    m.attr("__version__") = "0.1.7";
+    // SDK version note: 2026-08-20, TypeNex force-position support.
+    m.attr("__version__") = "0.1.8";
+
+    py::class_<ArmController::GripperState>(m, "GripperState")
+        .def(py::init<>())
+        .def_readonly("position", &ArmController::GripperState::position)
+        .def_readonly("distance_m", &ArmController::GripperState::distance_m)
+        .def_readonly("motor_position_rad", &ArmController::GripperState::motor_position_rad)
+        .def_readonly("motor_velocity_rad_s", &ArmController::GripperState::motor_velocity_rad_s)
+        .def_readonly("effort_nm", &ArmController::GripperState::effort_nm)
+        .def_readonly("commanded_effort_nm", &ArmController::GripperState::commanded_effort_nm)
+        .def_readonly("mos_temperature_c", &ArmController::GripperState::mos_temperature_c)
+        .def_readonly("rotor_temperature_c", &ArmController::GripperState::rotor_temperature_c)
+        .def_readonly("error_code", &ArmController::GripperState::error_code)
+        .def_readonly("feedback_age_ms", &ArmController::GripperState::feedback_age_ms)
+        .def_readonly("feedback_valid", &ArmController::GripperState::feedback_valid)
+        .def_readonly("enabled", &ArmController::GripperState::enabled)
+        .def_readonly("force_control_active", &ArmController::GripperState::force_control_active);
 
     py::class_<ArmController::MotionProgramItem>(m, "MotionProgramItem")
         .def(py::init<>())
@@ -191,6 +207,13 @@ PYBIND11_MODULE(startouch, m) {
         .def("setGripperDistance",
              py::overload_cast<double, double, double>(&ArmController::setGripperDistance),
              py::arg("distance"), py::arg("kp") = 8.0, py::arg("kd") = 0.1)
+        .def("setGripperDistanceEffort", &ArmController::setGripperDistanceEffort,
+             "Set gripper opening distance and motor output-shaft torque target/limit. "
+             "distance is metres and effort_nm is non-negative Nm.",
+             py::arg("distance"), py::arg("effort_nm"))
+        .def("setGripperPositionEffort", &ArmController::setGripperPositionEffort,
+             "Set normalized gripper opening and motor output-shaft torque target/limit in Nm.",
+             py::arg("position"), py::arg("effort_nm"))
         .def("setGripperAngle", &ArmController::setGripperAngle,
              "Set the TypeNex total included angle between both fingers in radians. "
              "The value is clamped to [-0.444011761707, 1.621585408028]. "
@@ -201,6 +224,10 @@ PYBIND11_MODULE(startouch, m) {
         .def("get_gripper_angle", &ArmController::get_gripper_angle,
              "Return the TypeNex total included angle between both fingers in radians. "
              "Other gripper types raise RuntimeError.")
+        .def("get_gripper_effort", &ArmController::get_gripper_effort,
+             "Return measured gripper motor output-shaft torque in Nm.")
+        .def("get_gripper_state", &ArmController::get_gripper_state,
+             "Return gripper position, motor torque, temperatures, error, and freshness.")
         .def("cleanup", &ArmController::cleanup,py::call_guard<py::gil_scoped_release>())
         ;
 }
