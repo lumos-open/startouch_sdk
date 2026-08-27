@@ -224,9 +224,9 @@ mit_mode:
   # 是否启用重力前馈补偿。默认 true；关闭后 MIT 前馈不含 G(q)。
   enable_gravity_compensation: true
   # 是否启用哥氏/离心项前馈补偿。默认 true；关闭后 MIT 前馈不含 C(q,dq)。
-  enable_coriolis_compensation: true
+  enable_coriolis_compensation: false
   # 是否启用惯量项前馈补偿。默认 true；关闭后 MIT 前馈不含 M(q)*ddq。
-  enable_inertia_compensation: true
+  enable_inertia_compensation: false
   # 动力学前馈力矩限幅，单位 Nm；作用于 G/C/M 合成后的总前馈力矩。原 gravity_tau_limits 已兼容但建议改用该项。
   feedforward_tau_limits: [27.0, 27.0, 27.0, 7.0, 12.5, 12.5]
   gravity_comp_scale: 1.05
