@@ -10,7 +10,7 @@ set -euo pipefail
 #   ./install_and_configure.sh --setup-can
 
 SDK_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONDA_ENV="${STARTOUCH_CONDA_ENV:-${ARM_CONDA_ENV:-teleop}}"
+CONDA_ENV="${STARTOUCH_CONDA_ENV:-${ARM_CONDA_ENV:-lumosteleop}}"
 CONDA_SH="${ARM_CONDA_SH:-}"
 SETUP_CAN=0
 CAN_LEFT="${ARM_CAN_LEFT:-can0}"
@@ -24,7 +24,7 @@ usage() {
 Usage: install_and_configure.sh [options]
 
 Options:
-  --conda-env NAME     Conda environment to install into (default: teleop)
+  --conda-env NAME     Conda environment to install into (default: lumosteleop)
   --conda-sh PATH      Path to conda.sh
   --setup-can          Configure and bring up both SocketCAN interfaces
   --can-left NAME      Left-arm CAN interface (default: can0)
@@ -289,8 +289,33 @@ if [[ "$SETUP_CAN" == "1" ]]; then
     done
 fi
 
-echo "=== Verifying SDK installation ==="
-PYTHON_BIN="$PYTHON_BIN" "$SDK_ROOT/verify_install.sh"
+SDK_VERSION="$(awk -F'"' '/^[[:space:]]*version[[:space:]]*=/{print $2; exit}' "$SDK_ROOT/pyproject.toml")"
+[[ "$SDK_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    echo "Unable to read a valid SDK version from: $SDK_ROOT/pyproject.toml" >&2
+    exit 1
+}
+
+version_at_least() {
+    local current="$1"
+    local minimum="$2"
+    local current_major current_minor current_patch
+    local minimum_major minimum_minor minimum_patch
+    IFS='.' read -r current_major current_minor current_patch <<<"$current"
+    IFS='.' read -r minimum_major minimum_minor minimum_patch <<<"$minimum"
+    ((
+        current_major > minimum_major ||
+        (current_major == minimum_major && current_minor > minimum_minor) ||
+        (current_major == minimum_major && current_minor == minimum_minor && current_patch >= minimum_patch)
+    ))
+}
+
+if version_at_least "$SDK_VERSION" "0.1.8"; then
+    echo "=== Verifying SDK installation (version $SDK_VERSION) ==="
+    PYTHON_BIN="$PYTHON_BIN" "$SDK_ROOT/verify_install.sh"
+else
+    echo "=== Skipping verify_install.sh ==="
+    echo "SDK version $SDK_VERSION is lower than 0.1.8; the verifier is specific to the 0.1.8 force-control release."
+fi
 
 echo "=== Adaptation complete ==="
 echo "Conda activation hook: $ACTIVATE_HOOK"
