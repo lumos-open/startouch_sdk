@@ -12,6 +12,22 @@
 
 class ArmController {
     public:
+        struct GripperState {
+            double position = 0.0;
+            double distance_m = 0.0;
+            double motor_position_rad = 0.0;
+            double motor_velocity_rad_s = 0.0;
+            double effort_nm = 0.0;
+            double commanded_effort_nm = 0.0;
+            int mos_temperature_c = 0;
+            int rotor_temperature_c = 0;
+            int error_code = 0;
+            double feedback_age_ms = 0.0;
+            bool feedback_valid = false;
+            bool enabled = false;
+            bool force_control_active = false;
+        };
+
         struct MotionProgramItem {
             std::string type;
             std::vector<std::vector<double>> waypoints;
@@ -116,12 +132,17 @@ class ArmController {
         void setGripperPosition(double position);
         void setGripperDistance(double distance);
         void setGripperDistance(double distance, double kp, double kd = 0.1);
+        // DM4310 force-position mode. effort_nm is motor output-shaft torque in Nm.
+        void setGripperDistanceEffort(double distance, double effort_nm);
+        void setGripperPositionEffort(double position, double effort_nm);
         // TypeNex only: total included angle between both fingers, in radians.
         void setGripperAngle(double angle);
         double get_gripper_position();
         double get_gripper_distance();
         // TypeNex only: total included angle between both fingers, in radians.
         double get_gripper_angle();
+        double get_gripper_effort();
+        GripperState get_gripper_state();
         void cleanup();
     private:
         // 线程对象

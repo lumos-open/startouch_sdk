@@ -107,7 +107,7 @@ pybind11_add_module(startouch ${CMAKE_CURRENT_SOURCE_DIR}/src/pybind_0825testfas
 target_include_directories(startouch PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${EIGEN3_INCLUDE_DIR}
 )
-target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Threads::Threads)
+target_link_libraries(startouch PRIVATE ${DEPEND_LIB_DEST} Threads::Threads Eigen3::Eigen)
 set_target_properties(startouch PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 install(TARGETS startouch LIBRARY DESTINATION .)

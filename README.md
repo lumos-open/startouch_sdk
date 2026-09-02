@@ -3,9 +3,14 @@
 StarTouch SDK provides the Python interface and prebuilt C++ runtime libraries
 for controlling StarTouch/FastTouch robotic arms.
 
-Current SDK version: `0.1.7`.
+Current SDK version: `0.1.8`.
 
-Version note: `2026-06-05`, author `Charlie`.
+## Important Change in 0.1.8
+
+Version `0.1.8` adds TypeNex gripper motor-torque control through the DM4310
+native force-position mode. Public `effort_nm` values and feedback are motor
+output-shaft torque in Nm; no tactile sensor is used. See
+[README_API.md](README_API.md) for the control and feedback interfaces.
 
 ## Important Change in 0.1.7
 

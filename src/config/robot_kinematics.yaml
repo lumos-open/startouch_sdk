@@ -168,6 +168,13 @@ gripper_control:
   # 底层有效范围：default_kp [0.1, 20.0]，default_kd [0.1, 1.0]。
   default_kp: 2.0
   default_kd: 0.1
+  # DM4310 native force-position mode (0x300+ID). This is a motion speed
+  # setting, not a force safety limit.
+  force_position_max_velocity_rad_s: 1.0
+  # Used only if the controller cannot read KT_Value and Imax from the motor.
+  # Defaults come from the supplied DM-J4310-2EC V1.2 manual: 12.5Nm / 20A.
+  fallback_torque_constant_nm_per_amp: 0.625
+  fallback_max_phase_current_a: 20.0
 
 self_collision:
   # 是否启用自碰撞保护。默认 true；基于下方手工胶囊做 capsule-capsule 距离检测。
