@@ -161,8 +161,8 @@ gripper_control:
   #   电机 -1.22173rad <-> angle  1.621585408028rad <-> distance 0.24073m
   # position 仍是 distance 的 0~1 归一化比例，不是 angle 的线性比例。
   # setGripperAngle/get_gripper_angle 仅支持 TypeNex；TypeFZ/TypeLJ 调用会报不支持。
-  # 更换夹爪后只需精确修改这一项；当前选择 TypeNex。
-  type: TypeNex
+  # 更换夹爪后只需精确修改这一项；当前选择 TypeLJ。
+  type: TypeLJ
   # 夹爪 MIT 位置控制默认 P/D。open/close/setGripperPosition/setGripperAngle 和
   # with_gripper 轨迹使用这里；setGripperDistance 使用其接口传入的 P/D。
   # 若接口显式传入 kp/kd，则以传参为准并覆盖本默认值。
