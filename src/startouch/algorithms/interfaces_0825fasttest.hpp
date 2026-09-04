@@ -135,11 +135,12 @@ class ArmController {
         // DM4310 force-position mode. effort_nm is motor output-shaft torque in Nm.
         void setGripperDistanceEffort(double distance, double effort_nm);
         void setGripperPositionEffort(double position, double effort_nm);
-        // TypeNex only: total included angle between both fingers, in radians.
+        // TypeNex native runtime: calibrated absolute included angle, in radians.
+        // The Python binding exposes a zero-based angle relative to the closed pose.
         void setGripperAngle(double angle);
         double get_gripper_position();
         double get_gripper_distance();
-        // TypeNex only: total included angle between both fingers, in radians.
+        // TypeNex native runtime: calibrated absolute included angle, in radians.
         double get_gripper_angle();
         double get_gripper_effort();
         GripperState get_gripper_state();

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // 支持 std::vector 到 Python list 的转换
 #include <pybind11/eigen.h>  // 支持 Eigen 矩阵到 Python 的转换
@@ -6,9 +7,30 @@
 #include "startouch/algorithms/interfaces_0825fasttest.hpp" 
 
 namespace py = pybind11;
+
+namespace {
+
+// The native runtime uses the calibrated absolute included angle, where the
+// mechanically closed TypeNex pose is -25.44 degrees.  The public Python API
+// uses the more useful zero-based opening angle: 0 rad is mechanically closed.
+constexpr double kTypeNexClosedAbsoluteAngleRad = -0.444011761707;
+constexpr double kTypeNexMaxOpeningAngleRad = 2.065597169735;
+
+double typenex_opening_to_absolute_angle(double opening_angle) {
+    return kTypeNexClosedAbsoluteAngleRad +
+           std::clamp(opening_angle, 0.0, kTypeNexMaxOpeningAngleRad);
+}
+
+double typenex_absolute_to_opening_angle(double absolute_angle) {
+    return std::clamp(absolute_angle - kTypeNexClosedAbsoluteAngleRad,
+                      0.0, kTypeNexMaxOpeningAngleRad);
+}
+
+}  // namespace
+
 PYBIND11_MODULE(startouch, m) {
-    // SDK version note: 2026-08-20, TypeNex force-position support.
-    m.attr("__version__") = "0.1.8";
+    // SDK version note: 2026-09-04, zero-based TypeNex opening-angle API.
+    m.attr("__version__") = "0.1.9";
 
     py::class_<ArmController::GripperState>(m, "GripperState")
         .def(py::init<>())
@@ -215,16 +237,24 @@ PYBIND11_MODULE(startouch, m) {
         .def("setGripperPositionEffort", &ArmController::setGripperPositionEffort,
              "Set normalized gripper opening and motor output-shaft torque target/limit in Nm.",
              py::arg("position"), py::arg("effort_nm"))
-        .def("setGripperAngle", &ArmController::setGripperAngle,
-             "Set the TypeNex total included angle between both fingers in radians. "
-             "The value is clamped to [-0.444011761707, 1.621585408028]. "
-             "Other gripper types raise RuntimeError.",
+        .def("setGripperAngle",
+             [](ArmController& controller, double opening_angle) {
+                 controller.setGripperAngle(
+                     typenex_opening_to_absolute_angle(opening_angle));
+             },
+             "Set the TypeNex total opening angle relative to the mechanically closed "
+             "pose in radians. 0 is closed and values are clamped to "
+             "[0, 2.065597169735]. Other gripper types raise RuntimeError.",
              py::arg("angle"))
         .def("get_gripper_position", &ArmController::get_gripper_position)
         .def("get_gripper_distance", &ArmController::get_gripper_distance)
-        .def("get_gripper_angle", &ArmController::get_gripper_angle,
-             "Return the TypeNex total included angle between both fingers in radians. "
-             "Other gripper types raise RuntimeError.")
+        .def("get_gripper_angle",
+             [](ArmController& controller) {
+                 return typenex_absolute_to_opening_angle(
+                     controller.get_gripper_angle());
+             },
+             "Return the TypeNex total opening angle relative to the mechanically "
+             "closed pose in radians. Other gripper types raise RuntimeError.")
         .def("get_gripper_effort", &ArmController::get_gripper_effort,
              "Return measured gripper motor output-shaft torque in Nm.")
         .def("get_gripper_state", &ArmController::get_gripper_state,

@@ -3,7 +3,13 @@
 StarTouch SDK provides the Python interface and prebuilt C++ runtime libraries
 for controlling StarTouch/FastTouch robotic arms.
 
-Current SDK version: `0.1.8`.
+Current SDK version: `0.1.9`.
+
+## Important Change in 0.1.9
+
+`setGripperAngle()` and `get_gripper_angle()` now use the TypeNex mechanically
+closed pose as `0 rad`. The public angle is the total opening angle relative to
+that pose and is clamped to `[0, 2.065597169735] rad`.
 
 ## Important Change in 0.1.8
 

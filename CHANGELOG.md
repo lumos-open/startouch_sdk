@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.9 - 2026-09-04
+
+### Zero-based TypeNex gripper angle
+
+- Changed `setGripperAngle()` and `get_gripper_angle()` to use the mechanically
+  closed pose as `0 rad`.
+- The public angle now means total opening angle relative to the closed pose and
+  is clamped to `[0, 2.065597169735] rad`.
+- Kept the native `-0.444011761707 rad` geometric calibration offset internal;
+  motor, distance, P/D, and torque-limit behavior are unchanged.
+
 ## 0.1.8 - 2026-08-20
 
 ### TypeNex gripper motor-torque control
