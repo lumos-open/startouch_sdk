@@ -8,7 +8,7 @@
 namespace py = pybind11;
 PYBIND11_MODULE(startouch, m) {
     // SDK version note: 2026-08-20, TypeNex force-position support.
-    m.attr("__version__") = "0.1.8";
+    m.attr("__version__") = "0.1.9";
 
     py::class_<ArmController::GripperState>(m, "GripperState")
         .def(py::init<>())
@@ -215,14 +215,14 @@ PYBIND11_MODULE(startouch, m) {
              "Set normalized gripper opening and motor output-shaft torque target/limit in Nm.",
              py::arg("position"), py::arg("effort_nm"))
         .def("setGripperAngle", &ArmController::setGripperAngle,
-             "Set the TypeNex total included angle between both fingers in radians. "
-             "The value is clamped to [-0.444011761707, 1.621585408028]. "
+             "Set the TypeNex opening angle from fully closed in radians (0 = closed). "
+             "The value is clamped to [0.0, 2.065597169735]. "
              "Other gripper types raise RuntimeError.",
              py::arg("angle"))
         .def("get_gripper_position", &ArmController::get_gripper_position)
         .def("get_gripper_distance", &ArmController::get_gripper_distance)
         .def("get_gripper_angle", &ArmController::get_gripper_angle,
-             "Return the TypeNex total included angle between both fingers in radians. "
+             "Return the TypeNex opening angle from fully closed in radians (0 = closed). "
              "Other gripper types raise RuntimeError.")
         .def("get_gripper_effort", &ArmController::get_gripper_effort,
              "Return measured gripper motor output-shaft torque in Nm.")

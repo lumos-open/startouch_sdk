@@ -135,11 +135,11 @@ class ArmController {
         // DM4310 force-position mode. effort_nm is motor output-shaft torque in Nm.
         void setGripperDistanceEffort(double distance, double effort_nm);
         void setGripperPositionEffort(double position, double effort_nm);
-        // TypeNex only: total included angle between both fingers, in radians.
+        // TypeNex only: opening angle from fully closed, in radians (0 = closed).
         void setGripperAngle(double angle);
         double get_gripper_position();
         double get_gripper_distance();
-        // TypeNex only: total included angle between both fingers, in radians.
+        // TypeNex only: opening angle from fully closed, in radians (0 = closed).
         double get_gripper_angle();
         double get_gripper_effort();
         GripperState get_gripper_state();

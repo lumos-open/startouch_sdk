@@ -113,39 +113,39 @@ The lower layer clamps the distance to the valid gripper range.
 
 ### `setGripperAngle(angle)` — TypeNex only / 仅 TypeNex
 
-Set the TypeNex total included angle between both fingers in radians. This is
-not a single-finger swing angle and not the motor angle.
+Set the TypeNex opening angle measured from the fully closed position in radians.
+`0` means fully closed; this is not the motor angle.
 
-按两根手指之间的总夹角控制 TypeNex 夹爪，单位为弧度。该值不是单指摆角，也不是电机角。
+按从完全夹紧位置开始的张开角控制 TypeNex 夹爪，单位为弧度。`0` 表示完全夹紧；该值不是电机角。
 
 ```python
-arm.setGripperAngle(0.523598775598)  # 30 degrees between both fingers
+arm.setGripperAngle(0.523598775598)  # open 30 degrees from fully closed
 ```
 
-- Valid range: `[-0.444011761707, 1.621585408028] rad` (`[-25.44°, 92.91°]`).
-- The maximum total swing is `2.065597169735 rad` (`118.35°`).
+- Valid range: `[0.0, 2.065597169735] rad` (`[0°, 118.35°]`).
+- `0 rad` is fully closed; `2.065597169735 rad` is fully open.
 - Values outside the range are clamped to the nearest endpoint.
-- The motor angle is linear in this included angle: motor `0 rad` is the closed
+- The motor angle is linear in this opening angle: motor `0 rad` is the closed
   endpoint and motor `-1.22173 rad` is the fully open endpoint.
 - The angle command is converted to the existing distance command path, so the
   configured gripper P/D defaults, command timing, and distance watchdog remain in use.
 - Calling this method for TypeFZ or TypeLJ raises `RuntimeError` and sends no command.
 
-- 有效范围：`[-0.444011761707, 1.621585408028] rad`，即 `[-25.44°, 92.91°]`。
-- 最大总摆幅：`2.065597169735 rad`，即 `118.35°`。
+- 有效范围：`[0.0, 2.065597169735] rad`，即 `[0°, 118.35°]`。
+- `0 rad` 表示完全夹紧，`2.065597169735 rad` 表示完全张开。
 - 越界值会截断到最近端点。
-- 电机角与该两指总夹角线性等比：电机 `0 rad` 对应闭合端，电机 `-1.22173 rad` 对应全开端。
+- 电机角与该张开角线性等比：电机 `0 rad` 对应闭合端，电机 `-1.22173 rad` 对应全开端。
 - 角度命令会转换到现有 distance 命令链路，因此继续使用配置中的夹爪 P/D、命令周期和 distance watchdog。
 - TypeFZ 或 TypeLJ 调用会抛出 `RuntimeError`，且不会下发夹爪命令。
 
 ### `get_gripper_angle()` — TypeNex only / 仅 TypeNex
 
-Return the TypeNex total included angle between both fingers in radians. The
+Return the TypeNex opening angle from fully closed in radians. The
 value is derived from the latest gripper motor feedback through the same
 calibrated distance/angle mapping. Calling it for TypeFZ or TypeLJ raises
 `RuntimeError`.
 
-返回 TypeNex 两根手指之间的总夹角，单位为弧度。返回值由最新夹爪电机反馈通过同一套
+返回 TypeNex 从完全夹紧位置开始的张开角，单位为弧度，`0` 表示完全夹紧。返回值由最新夹爪电机反馈通过同一套
 distance/angle 标定映射换算得到；TypeFZ 或 TypeLJ 调用会抛出 `RuntimeError`。
 
 ```python
@@ -776,7 +776,7 @@ for replay and deployment use `move_p()`, `move_l()`, or
 | Quaternion | `[w, x, y, z]` | unit quaternion |
 | Gripper position | `0.0 ~ 1.0` | ratio |
 | Gripper distance | configured; TypeNex: `0.0 ~ 0.24073` | m |
-| TypeNex included finger angle | `-0.444011761707 ~ 1.621585408028` | rad |
+| TypeNex opening angle (`0` = closed) | `0.0 ~ 2.065597169735` | rad |
 | `time_sec` / `tf` | scalar | s |
 
 | 数据 | 格式 | 单位 |
@@ -788,7 +788,7 @@ for replay and deployment use `move_p()`, `move_l()`, or
 | 四元数 | `[w, x, y, z]` | 单位四元数 |
 | 夹爪开度 | `0.0 ~ 1.0` | 比例 |
 | 夹爪距离 | 按类型配置；TypeNex：`0.0 ~ 0.24073` | m |
-| TypeNex 两指总夹角 | `-0.444011761707 ~ 1.621585408028` | rad |
+| TypeNex 张开角（`0` 为夹紧） | `0.0 ~ 2.065597169735` | rad |
 | `time_sec` / `tf` | 标量 | s |
 
 ## Safety Notes

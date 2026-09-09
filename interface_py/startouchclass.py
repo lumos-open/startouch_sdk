@@ -7,7 +7,7 @@ import time
 import startouch
 
 # SDK version note: 2026-08-20, TypeNex force-position support.
-SDK_VERSION = "0.1.8"
+SDK_VERSION = "0.1.9"
 __version__ = SDK_VERSION
 DEFAULT_MOTION_SPEED_PERCENT = 0.1
 _GRIPPER_COMMAND_PERIOD_SEC = 0.005
@@ -748,7 +748,7 @@ class SingleArm:
         return True
 
     def setGripperAngle(self, angle:float) -> bool:
-        """Set the TypeNex total included angle between both fingers, in radians."""
+        """Set TypeNex opening from fully closed in radians; 0 means closed."""
         self.arm.setGripperAngle(angle)
         return True
 
@@ -761,7 +761,7 @@ class SingleArm:
         return self.arm.get_gripper_distance()
 
     def get_gripper_angle(self) -> float:
-        """Return the TypeNex total included angle between both fingers, in radians."""
+        """Return TypeNex opening from fully closed in radians; 0 means closed."""
         return self.arm.get_gripper_angle()
 
     def get_gripper_effort(self) -> float:
