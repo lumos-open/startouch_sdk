@@ -752,6 +752,32 @@ class SingleArm:
         self.arm.setGripperAngle(angle)
         return True
 
+    def setGripperAngleInterpolated(
+        self, angle:float, duration:float = 1.0, steps:int = 20
+    ) -> bool:
+        """Move TypeNex from its current angle using timed linear steps."""
+        angle = float(angle)
+        duration = float(duration)
+        steps = int(steps)
+        if not np.isfinite(angle) or angle < 0.0 or angle > 2.065597169735:
+            raise ValueError("angle must be finite and in [0, 2.065597169735] rad")
+        if not np.isfinite(duration) or duration < 0.0:
+            raise ValueError("duration must be finite and non-negative")
+        if steps < 1:
+            raise ValueError("steps must be at least 1")
+
+        start_angle = float(self.get_gripper_angle())
+        interval = duration / steps
+        start_time = time.monotonic()
+        for index in range(1, steps + 1):
+            deadline = start_time + interval * index
+            remaining = deadline - time.monotonic()
+            if remaining > 0.0:
+                time.sleep(remaining)
+            target = start_angle + (angle - start_angle) * index / steps
+            self.setGripperAngle(target)
+        return True
+
     def get_gripper_position(self) -> float:
         #设置夹爪开合程度  0是闭合 1是开合
         return self.arm.get_gripper_position()
