@@ -35,8 +35,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Interactively move TypeNex to target angles in timed linear steps."
     )
-    parser.add_argument("--duration", type=float, default=1.0,
-                        help="interpolation time per command in seconds (default: 1.0)")
+    parser.add_argument("--duration", type=float, default=0.1,
+                        help="interpolation time per command in seconds (default: 0.1)")
     parser.add_argument("--steps", type=int, default=20,
                         help="linear steps per command (default: 20)")
     parser.add_argument("--can", default="can0", help="SocketCAN interface (default: can0)")
