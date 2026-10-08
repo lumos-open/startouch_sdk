@@ -753,7 +753,7 @@ class SingleArm:
         return True
 
     def setGripperAngleInterpolated(
-        self, angle:float, duration:float = 1.0, steps:int = 20
+        self, angle:float, duration:float = 0.1, steps:int = 20
     ) -> bool:
         """Move TypeNex from its current angle using timed linear steps."""
         angle = float(angle)
