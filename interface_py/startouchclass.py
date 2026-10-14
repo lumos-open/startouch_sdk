@@ -752,6 +752,11 @@ class SingleArm:
         self.arm.setGripperAngle(angle)
         return True
 
+    def setGripperAngleEffort(self, angle:float, effort_nm:float) -> bool:
+        """Set TypeNex opening angle (rad) with a motor torque target/limit (Nm)."""
+        self.arm.setGripperAngleEffort(angle, effort_nm)
+        return True
+
     def setGripperAngleInterpolated(
         self, angle:float, duration:float = 0.1, steps:int = 20
     ) -> bool:

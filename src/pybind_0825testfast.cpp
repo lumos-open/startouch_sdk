@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cmath>
+#include <stdexcept>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  // 支持 std::vector 到 Python list 的转换
 #include <pybind11/eigen.h>  // 支持 Eigen 矩阵到 Python 的转换
@@ -246,6 +248,20 @@ PYBIND11_MODULE(startouch, m) {
              "pose in radians. 0 is closed and values are clamped to "
              "[0, 2.065597169735]. Other gripper types raise RuntimeError.",
              py::arg("angle"))
+        .def("setGripperAngleEffort",
+             [](ArmController& controller, double opening_angle, double effort_nm) {
+                 if (!std::isfinite(opening_angle)) {
+                     throw std::invalid_argument(
+                         "setGripperAngleEffort angle must be finite");
+                 }
+                 controller.setGripperAngleEffort(
+                     typenex_opening_to_absolute_angle(opening_angle), effort_nm);
+             },
+             "Set the TypeNex total opening angle relative to the mechanically closed "
+             "pose in radians and the non-negative motor output-shaft torque target/limit "
+             "in Nm. 0 is closed and angle values are clamped to [0, 2.065597169735]. "
+             "Other gripper types raise RuntimeError.",
+             py::arg("angle"), py::arg("effort_nm"))
         .def("get_gripper_position", &ArmController::get_gripper_position)
         .def("get_gripper_distance", &ArmController::get_gripper_distance)
         .def("get_gripper_angle",

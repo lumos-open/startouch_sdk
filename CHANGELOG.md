@@ -8,6 +8,8 @@
   closed pose as `0 rad`.
 - The public angle now means total opening angle relative to the closed pose and
   is clamped to `[0, 2.065597169735] rad`.
+- Added `setGripperAngleEffort(angle, effort_nm)` with the same zero-based
+  TypeNex opening-angle convention and DM4310 force-position control.
 - Kept the native `-0.444011761707 rad` geometric calibration offset internal;
   motor, distance, P/D, and torque-limit behavior are unchanged.
 

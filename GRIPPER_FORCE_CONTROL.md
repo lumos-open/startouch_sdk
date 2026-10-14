@@ -3,7 +3,9 @@
 ## 控制定义
 
 - 电机：DM-J4310-2EC V1.2，无触觉/指尖力传感器。
-- 接口：`setGripperDistanceEffort(distance, effort_nm)`。
+- 接口：`setGripperDistanceEffort(distance, effort_nm)`；TypeNex 还支持
+  `setGripperAngleEffort(angle, effort_nm)`，其中 `angle` 为从机械闭合位置
+  开始的张开角，单位 rad。
 - `effort_nm`：电机输出轴目标/限制力矩，底层转换为力位混控的相电流上限；不是独立的力矩闭环。
 - 运行时优先读取电机 `TMAX`，按 `i_des = effort_nm / TMAX` 换算；读取失败时才使用 `KT_Value * Imax` 或 YAML 兜底值。
 

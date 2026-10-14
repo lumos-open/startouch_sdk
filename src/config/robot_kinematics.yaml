@@ -1,6 +1,7 @@
 kinematics:
   tool:
-    xyz: [0.17334, 0.0, 0.0] # TypeFZ 夹爪取 0.15584，TypeLJ 夹爪取 0.17334
+          #xyz: [0.15584, 0.0, 0.0]
+    xyz: [0.0, 0.0, 0.0] # TypeFZ 夹爪取 0.15584，TypeLJ 夹爪取 0.17334
     rpy: [0.0, 0.0, 0.0]
   payload:
     mass: 0 #0.126
@@ -33,7 +34,7 @@ ik_fallback:
 ik_solver:
   # 默认 kdl_with_approx_fallback：KDL exact/位置扰动优先，全部失败后再用近似 IK 兜底。
   # fast 仅用于对比/调试；kdl 可恢复纯 KDL 主路径。
-  mode: kdl_with_approx_fallback
+  mode: analytic
   position_tolerance_m: 0.003
   orientation_tolerance_rad: 0.05
   max_fast_iterations: 5
@@ -151,12 +152,10 @@ gripper_control:
   # TypeFZ：起始角偏置 1.056071rad，最大打开距离 0.085m。
   # TypeLJ：起始角偏置 1.210426rad，最大打开距离 0.08m。
   # TypeNex 是双指对称摆动式夹爪。distance 表示两指尖间距，范围 [0, 0.24073]m。
-  # 因手指采用摆动形式，distance 与两指总夹角是基准角补偿后的半角正弦关系，并非线性关系。
-  # TypeNex 专用 angle 接口表示从机械闭合位开始的两指总张开角，单位 rad；
-  # 不是单指摆角或电机角。angle=0rad 为紧闭，范围 [0, 2.065597169735]rad
-  #（最大总摆幅 118.35°），越界值会截断。
-  # 底层绝对几何夹角仍包含 -0.444011761707rad（-25.44°）标定偏置；公开 angle
-  # 接口会自动补偿该偏置。电机范围 [-1.22173, 0]rad，与公开 angle 线性等比：
+  # 因手指采用摆动形式，distance 与物理夹角是基准角补偿后的半角正弦关系，并非线性关系。
+  # TypeNex 专用 angle 接口表示从完全夹紧位置开始的张开角，单位 rad；0 表示完全夹紧。
+  # angle 范围 [0, 2.065597169735]rad，即 [0°, 118.35°]，越界值会截断。
+  # 电机范围 [-1.22173, 0]rad，电机角与 angle 线性等比：
   #   电机 0rad        <-> angle 0rad              <-> distance 0m
   #   电机 -1.22173rad <-> angle 2.065597169735rad <-> distance 0.24073m
   # position 仍是 distance 的 0~1 归一化比例，不是 angle 的线性比例。
@@ -171,7 +170,7 @@ gripper_control:
   default_kd: 0.1
   # DM4310 native force-position mode (0x300+ID). This is a motion speed
   # setting, not a force safety limit.
-  force_position_max_velocity_rad_s: 1.0
+  force_position_max_velocity_rad_s: 20.0
   # Used only if the controller cannot read KT_Value and Imax from the motor.
   # Defaults come from the supplied DM-J4310-2EC V1.2 manual: 12.5Nm / 20A.
   fallback_torque_constant_nm_per_amp: 0.625
@@ -224,9 +223,9 @@ mit_mode:
   # 是否启用重力前馈补偿。默认 true；关闭后 MIT 前馈不含 G(q)。
   enable_gravity_compensation: true
   # 是否启用哥氏/离心项前馈补偿。默认 true；关闭后 MIT 前馈不含 C(q,dq)。
-  enable_coriolis_compensation: true
+  enable_coriolis_compensation: false
   # 是否启用惯量项前馈补偿。默认 true；关闭后 MIT 前馈不含 M(q)*ddq。
-  enable_inertia_compensation: true
+  enable_inertia_compensation: false
   # 动力学前馈力矩限幅，单位 Nm；作用于 G/C/M 合成后的总前馈力矩。原 gravity_tau_limits 已兼容但建议改用该项。
   feedforward_tau_limits: [27.0, 27.0, 27.0, 7.0, 12.5, 12.5]
   gravity_comp_scale: 1.05

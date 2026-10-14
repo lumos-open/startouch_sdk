@@ -165,11 +165,14 @@ Currently this Python wrapper calls `setGripperDistance(distance, kp, kd)`.
 
 当前 Python 包装层会调用 `setGripperDistance(distance, kp, kd)`。
 
-### `setGripperDistanceEffort(distance, effort_nm)` / `setGripperPositionEffort(position, effort_nm)`
+### `setGripperDistanceEffort(distance, effort_nm)` / `setGripperPositionEffort(position, effort_nm)` / `setGripperAngleEffort(angle, effort_nm)`
 
 Control TypeNex through the DM4310 native force-position mode. `distance` is in
-metres, `position` is the normalized opening ratio, and `effort_nm` is the
-non-negative motor output-shaft torque target/limit in Nm.
+metres, `position` is the normalized opening ratio, `angle` is the zero-based
+opening angle in radians, and `effort_nm` is the non-negative motor output-shaft
+torque target/limit in Nm. `setGripperAngleEffort` uses the same calibrated
+angle-to-distance mapping as `setGripperAngle` and clamps the public angle to
+`[0, 2.065597169735]`.
 
 通过 DM4310 原生力位混控模式控制 TypeNex。`distance` 单位为米，`position`
 为归一化开度，`effort_nm` 为非负的电机输出轴目标/限制力矩，单位 Nm。
@@ -178,6 +181,8 @@ non-negative motor output-shaft torque target/limit in Nm.
 arm.setGripperDistanceEffort(0.02, 1.5)
 # or
 arm.setGripperPositionEffort(0.1, 1.5)
+# or, open TypeNex 30 degrees from the mechanically closed pose
+arm.setGripperAngleEffort(0.523598775598, 1.5)
 ```
 
 The driver implements force-position control as position/velocity control with

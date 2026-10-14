@@ -138,6 +138,8 @@ class ArmController {
         // TypeNex native runtime: calibrated absolute included angle, in radians.
         // The Python binding exposes a zero-based angle relative to the closed pose.
         void setGripperAngle(double angle);
+        // Native angle plus motor output-shaft torque target/limit in Nm.
+        void setGripperAngleEffort(double angle, double effort_nm);
         double get_gripper_position();
         double get_gripper_distance();
         // TypeNex native runtime: calibrated absolute included angle, in radians.
