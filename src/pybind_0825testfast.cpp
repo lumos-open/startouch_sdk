@@ -219,6 +219,12 @@ PYBIND11_MODULE(startouch, m) {
              "The value is clamped to [0.0, 2.065597169735]. "
              "Other gripper types raise RuntimeError.",
              py::arg("angle"))
+        .def("setGripperAngleEffort", &ArmController::setGripperAngleEffort,
+             "Set the TypeNex opening angle from fully closed in radians and "
+             "the non-negative motor output-shaft torque target/limit in Nm. "
+             "The angle is clamped to [0.0, 2.065597169735]. "
+             "Other gripper types raise RuntimeError.",
+             py::arg("angle"), py::arg("effort_nm"))
         .def("get_gripper_position", &ArmController::get_gripper_position)
         .def("get_gripper_distance", &ArmController::get_gripper_distance)
         .def("get_gripper_angle", &ArmController::get_gripper_angle,

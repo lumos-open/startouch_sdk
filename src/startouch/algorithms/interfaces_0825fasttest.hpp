@@ -137,6 +137,8 @@ class ArmController {
         void setGripperPositionEffort(double position, double effort_nm);
         // TypeNex only: opening angle from fully closed, in radians (0 = closed).
         void setGripperAngle(double angle);
+        // TypeNex only: opening angle in radians with motor output-shaft torque in Nm.
+        void setGripperAngleEffort(double angle, double effort_nm);
         double get_gripper_position();
         double get_gripper_distance();
         // TypeNex only: opening angle from fully closed, in radians (0 = closed).

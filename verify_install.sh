@@ -37,6 +37,8 @@ for library in "${runtime_libraries[@]}"; do
     library_hashes+=("$library=$actual_sha")
     nm -D -C "$library" | grep 'ArmController::setGripperDistanceEffort' >/dev/null || \
         fail "$library does not contain the 0.1.8 gripper force-control symbols"
+    nm -D -C "$library" | grep 'ArmController::setGripperAngleEffort' >/dev/null || \
+        fail "$library does not contain the TypeNex angle-effort symbol"
 done
 
 module_path="$(
@@ -51,6 +53,7 @@ assert startouch.__version__ == "0.1.8", startouch.__version__
 assert startouchclass.__version__ == "0.1.8", startouchclass.__version__
 assert hasattr(startouch.ArmController, "setGripperDistanceEffort")
 assert hasattr(startouch.ArmController, "setGripperPositionEffort")
+assert hasattr(startouch.ArmController, "setGripperAngleEffort")
 assert hasattr(startouch.ArmController, "get_gripper_state")
 print(startouch.__file__)
 PY

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added `setGripperAngleEffort(angle, effort_nm)` for TypeNex. The opening angle
+  is specified in radians from the fully closed position and is converted through
+  the calibrated TypeNex angle-to-distance mapping before using force-position
+  control.
+
 ## 0.1.8 - 2026-08-20
 
 ### TypeNex gripper motor-torque control
